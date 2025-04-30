@@ -5,20 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Administration Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shadcn/ui@latest/dist/ui.css">
+    <link rel="stylesheet" href="shadcn-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #3b82f6;
-            --primary-dark: #2563eb;
-            --secondary: #f43f5e;
-            --dark: #1e293b;
-            --light: #f8fafc;
-        }
-        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
+            background-color: hsl(var(--background));
         }
         
         .sidebar {
@@ -39,20 +31,9 @@
                 transform: translateX(0);
             }
         }
-        
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .active-nav-item {
-            background-color: #e0e7ff;
-            color: var(--primary-dark);
-            border-left: 4px solid var(--primary);
-        }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
     <div class="flex h-screen overflow-hidden">
         <!-- Mobile sidebar backdrop -->
         <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden hidden"></div>
@@ -62,7 +43,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b">
                 <div class="flex items-center">
                     <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"></path>
                     </svg>
                     <span class="ml-2 text-xl font-bold text-gray-800">EduAdmin</span>
                 </div>
@@ -73,8 +54,10 @@
                 </button>
             </div>
             <div class="px-4 py-6">
-                <div class="flex items-center px-4 py-3 bg-blue-50 rounded-lg">
-                    <img class="w-10 h-10 rounded-full" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile">
+                <div class="flex items-center px-4 py-3 bg-blue-50 rounded-lg shadcn-card">
+                    <div class="shadcn-avatar">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile">
+                    </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-900">Sarah Johnson</p>
                         <p class="text-sm text-gray-500">Guru Matematika</p>
@@ -196,12 +179,14 @@
                         </button>
                         <div class="relative">
                             <button id="user-menu-button" class="flex items-center text-sm rounded-full focus:outline-none">
-                                <img class="w-8 h-8 rounded-full" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile">
+                                <div class="shadcn-avatar">
+                                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile">
+                                </div>
                             </button>
-                            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</a>
+                            <div id="user-menu" class="shadcn-dropdown hidden right-0 mt-2 w-48 z-50">
+                                <a href="#" class="shadcn-dropdown-item">Your Profile</a>
+                                <a href="#" class="shadcn-dropdown-item">Settings</a>
+                                <a href="#" class="shadcn-dropdown-item destructive">Sign out</a>
                             </div>
                         </div>
                     </div>
@@ -212,82 +197,74 @@
             <main class="p-4 sm:p-6 lg:p-8">
                 <!-- Stats cards -->
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="bg-white overflow-hidden shadow rounded-lg card-hover transition-all duration-200">
-                        <div class="px-4 py-5 sm:p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Siswa</dt>
-                                        <dd class="flex items-baseline">
-                                            <div class="text-2xl font-semibold text-gray-900">128</div>
-                                        </dd>
-                                    </dl>
-                                </div>
+                    <div class="shadcn-card p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Siswa</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">128</div>
+                                    </dd>
+                                </dl>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-white overflow-hidden shadow rounded-lg card-hover transition-all duration-200">
-                        <div class="px-4 py-5 sm:p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Kelas</dt>
-                                        <dd class="flex items-baseline">
-                                            <div class="text-2xl font-semibold text-gray-900">6</div>
-                                        </dd>
-                                    </dl>
-                                </div>
+                    <div class="shadcn-card p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Kelas</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">6</div>
+                                    </dd>
+                                </dl>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-white overflow-hidden shadow rounded-lg card-hover transition-all duration-200">
-                        <div class="px-4 py-5 sm:p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Jadwal Hari Ini</dt>
-                                        <dd class="flex items-baseline">
-                                            <div class="text-2xl font-semibold text-gray-900">3</div>
-                                        </dd>
-                                    </dl>
-                                </div>
+                    <div class="shadcn-card p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Jadwal Hari Ini</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">3</div>
+                                    </dd>
+                                </dl>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="bg-white overflow-hidden shadow rounded-lg card-hover transition-all duration-200">
-                        <div class="px-4 py-5 sm:p-6">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Event Mendatang</dt>
-                                        <dd class="flex items-baseline">
-                                            <div class="text-2xl font-semibold text-gray-900">2</div>
-                                        </dd>
-                                    </dl>
-                                </div>
+                    <div class="shadcn-card p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Event Mendatang</dt>
+                                    <dd class="flex items-baseline">
+                                        <div class="text-2xl font-semibold text-gray-900">2</div>
+                                    </dd>
+                                </dl>
                             </div>
                         </div>
                     </div>
@@ -296,7 +273,7 @@
                 <!-- Recent activities and schedule -->
                 <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <!-- Recent activities -->
-                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="shadcn-card overflow-hidden">
                         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Aktivitas Terkini</h3>
                         </div>
@@ -366,7 +343,7 @@
                     </div>
                     
                     <!-- Today's schedule -->
-                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="shadcn-card overflow-hidden">
                         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
                             <h3 class="text-lg leading-6 font-medium text-gray-900">Jadwal Hari Ini</h3>
                         </div>
@@ -383,7 +360,7 @@
                                             <p class="text-sm font-medium text-gray-900">Matematika</p>
                                             <p class="text-sm text-gray-500">Kelas 9A - 08:00 - 09:30</p>
                                             <div class="mt-2">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Selesai</span>
+                                                <span class="shadcn-badge shadcn-badge-primary">Selesai</span>
                                             </div>
                                         </div>
                                     </div>
@@ -392,14 +369,14 @@
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 bg-purple-100 rounded-md p-2">
                                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                             </svg>
                                         </div>
                                         <div class="ml-4">
                                             <p class="text-sm font-medium text-gray-900">Fisika</p>
                                             <p class="text-sm text-gray-500">Kelas 10B - 10:00 - 11:30</p>
                                             <div class="mt-2">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Berlangsung</span>
+                                                <span class="shadcn-badge shadcn-badge-secondary">Berlangsung</span>
                                             </div>
                                         </div>
                                     </div>
@@ -415,7 +392,7 @@
                                             <p class="text-sm font-medium text-gray-900">Matematika</p>
                                             <p class="text-sm text-gray-500">Kelas 8C - 13:00 - 14:30</p>
                                             <div class="mt-2">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Akan datang</span>
+                                                <span class="shadcn-badge shadcn-badge-tertiary">Akan datang</span>
                                             </div>
                                         </div>
                                     </div>
@@ -432,7 +409,7 @@
                 <div class="mt-8">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Aksi Cepat</h3>
                     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                        <a href="#" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
                             <div class="bg-blue-100 rounded-full p-3 mb-3">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -440,7 +417,7 @@
                             </div>
                             <span class="text-sm font-medium text-gray-900">Tambah Siswa</span>
                         </a>
-                        <a href="#" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
                             <div class="bg-green-100 rounded-full p-3 mb-3">
                                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -448,7 +425,7 @@
                             </div>
                             <span class="text-sm font-medium text-gray-900">Input Nilai</span>
                         </a>
-                        <a href="#" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
                             <div class="bg-yellow-100 rounded-full p-3 mb-3">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -456,7 +433,7 @@
                             </div>
                             <span class="text-sm font-medium text-gray-900">Presensi</span>
                         </a>
-                        <a href="#" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
                             <div class="bg-purple-100 rounded-full p-3 mb-3">
                                 <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -464,7 +441,7 @@
                             </div>
                             <span class="text-sm font-medium text-gray-900">Jurnal</span>
                         </a>
-                        <a href="#" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
                             <div class="bg-red-100 rounded-full p-3 mb-3">
                                 <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -472,7 +449,7 @@
                             </div>
                             <span class="text-sm font-medium text-gray-900">Event</span>
                         </a>
-                        <a href="#" class="bg-white overflow-hidden shadow rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
                             <div class="bg-indigo-100 rounded-full p-3 mb-3">
                                 <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -506,11 +483,7 @@
         // User menu toggle
         document.getElementById('user-menu-button').addEventListener('click', function() {
             const menu = document.getElementById('user-menu');
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-            } else {
-                menu.classList.add('hidden');
-            }
+            menu.classList.toggle('open');
         });
         
         // Close user menu when clicking outside
@@ -519,7 +492,7 @@
             const userMenuButton = document.getElementById('user-menu-button');
             
             if (!userMenu.contains(event.target) && !userMenuButton.contains(event.target)) {
-                userMenu.classList.add('hidden');
+                userMenu.classList.remove('open');
             }
         });
         
@@ -533,5 +506,216 @@
         window.addEventListener('resize', handleResize);
         handleResize();
     </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=ipadevpro/dashboard-administrasi-guru" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+
+    <!-- API Integration following CORS bypass rules -->
+    <script>
+        // Replace with your deployed Google Apps Script web app URL
+        const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID_HERE/exec';
+        
+        // Generic API function for making requests to the GAS backend
+        async function callApi(action, params = {}) {
+            try {
+                // Combine action with other parameters
+                const data = {
+                    action,
+                    ...params
+                };
+                
+                // Create URLSearchParams object (produces application/x-www-form-urlencoded format)
+                const formData = new URLSearchParams(data);
+                
+                // Make fetch request following the CORS rules
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                    // Note: No custom headers, no Content-Type set explicitly
+                });
+                
+                // Parse the JSON response
+                const result = await response.json();
+                
+                return result;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+        
+        // === Authentication API ===
+        async function login(username, password) {
+            return callApi('login', { username, password });
+        }
+        
+        // === Kelas (Class) API ===
+        async function getKelas(id) {
+            return callApi('getKelas', id ? { id } : {});
+        }
+        
+        async function createKelas(kelasData) {
+            return callApi('createKelas', kelasData);
+        }
+        
+        async function updateKelas(id, kelasData) {
+            return callApi('updateKelas', { id, ...kelasData });
+        }
+        
+        async function deleteKelas(id) {
+            return callApi('deleteKelas', { id });
+        }
+        
+        // === Siswa (Student) API ===
+        async function getSiswa(id, kelas_id) {
+            const params = {};
+            if (id) params.id = id;
+            if (kelas_id) params.kelas_id = kelas_id;
+            return callApi('getSiswa', params);
+        }
+        
+        async function createSiswa(siswaData) {
+            return callApi('createSiswa', siswaData);
+        }
+        
+        async function updateSiswa(id, siswaData) {
+            return callApi('updateSiswa', { id, ...siswaData });
+        }
+        
+        async function deleteSiswa(id) {
+            return callApi('deleteSiswa', { id });
+        }
+        
+        // === Tugas (Assignment) API ===
+        async function getTugas(id, kelas_id) {
+            const params = {};
+            if (id) params.id = id;
+            if (kelas_id) params.kelas_id = kelas_id;
+            return callApi('getTugas', params);
+        }
+        
+        async function createTugas(tugasData) {
+            return callApi('createTugas', tugasData);
+        }
+        
+        async function updateTugas(id, tugasData) {
+            return callApi('updateTugas', { id, ...tugasData });
+        }
+        
+        async function deleteTugas(id) {
+            return callApi('deleteTugas', { id });
+        }
+        
+        // === Nilai (Grade) API ===
+        async function getNilai(id, siswa_id, tugas_id) {
+            const params = {};
+            if (id) params.id = id;
+            if (siswa_id) params.siswa_id = siswa_id;
+            if (tugas_id) params.tugas_id = tugas_id;
+            return callApi('getNilai', params);
+        }
+        
+        async function createNilai(nilaiData) {
+            return callApi('createNilai', nilaiData);
+        }
+        
+        async function updateNilai(id, nilaiData) {
+            return callApi('updateNilai', { id, ...nilaiData });
+        }
+        
+        async function deleteNilai(id) {
+            return callApi('deleteNilai', { id });
+        }
+        
+        // === Presensi (Attendance) API ===
+        async function getPresensi(id, kelas_id, tanggal) {
+            const params = {};
+            if (id) params.id = id;
+            if (kelas_id) params.kelas_id = kelas_id;
+            if (tanggal) params.tanggal = tanggal;
+            return callApi('getPresensi', params);
+        }
+        
+        async function createPresensi(presensiData) {
+            return callApi('createPresensi', presensiData);
+        }
+        
+        async function updatePresensi(id, presensiData) {
+            return callApi('updatePresensi', { id, ...presensiData });
+        }
+        
+        async function deletePresensi(id) {
+            return callApi('deletePresensi', { id });
+        }
+        
+        // === Event API ===
+        async function getEvent(id) {
+            return callApi('getEvent', id ? { id } : {});
+        }
+        
+        async function createEvent(eventData) {
+            return callApi('createEvent', eventData);
+        }
+        
+        async function updateEvent(id, eventData) {
+            return callApi('updateEvent', { id, ...eventData });
+        }
+        
+        async function deleteEvent(id) {
+            return callApi('deleteEvent', { id });
+        }
+        
+        // === Jurnal Pembelajaran (Learning Journal) API ===
+        async function getJurnal(id, kelas_id) {
+            const params = {};
+            if (id) params.id = id;
+            if (kelas_id) params.kelas_id = kelas_id;
+            return callApi('getJurnal', params);
+        }
+        
+        async function createJurnal(jurnalData) {
+            return callApi('createJurnal', jurnalData);
+        }
+        
+        async function updateJurnal(id, jurnalData) {
+            return callApi('updateJurnal', { id, ...jurnalData });
+        }
+        
+        async function deleteJurnal(id) {
+            return callApi('deleteJurnal', { id });
+        }
+        
+        // === Bank Soal (Question Bank) API ===
+        async function getBankSoal(id, kategori) {
+            const params = {};
+            if (id) params.id = id;
+            if (kategori) params.kategori = kategori;
+            return callApi('getBankSoal', params);
+        }
+        
+        async function createBankSoal(soalData) {
+            return callApi('createBankSoal', soalData);
+        }
+        
+        async function updateBankSoal(id, soalData) {
+            return callApi('updateBankSoal', { id, ...soalData });
+        }
+        
+        async function deleteBankSoal(id) {
+            return callApi('deleteBankSoal', { id });
+        }
+        
+        // Example: Load data when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // You can uncomment these when you've deployed your Google Apps Script backend
+                // const kelasData = await getKelas();
+                // const siswaData = await getSiswa();
+                // console.log("Data loaded:", { kelas: kelasData, siswa: siswaData });
+                
+                // For now just log a message
+                console.log("API integration ready. Deploy your Google Apps Script backend to enable data fetching.");
+            } catch (error) {
+                console.error("Error loading initial data:", error);
+            }
+        });
+    </script>
+</body>
 </html>
