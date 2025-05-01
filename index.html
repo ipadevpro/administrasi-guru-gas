@@ -56,7 +56,15 @@
         }
         
         .hidden {
+            display: none !important;
+        }
+        
+        #main-content {
             display: none;
+        }
+        
+        #main-content.visible {
+            display: flex;
         }
     </style>
 </head>
@@ -99,7 +107,7 @@
         </div>
     </div>
 
-    <div class="flex h-screen overflow-hidden">
+    <div id="main-content" class="flex h-screen overflow-hidden">
         <!-- Mobile sidebar backdrop -->
         <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden hidden"></div>
         
@@ -260,270 +268,405 @@
             
             <!-- Main content area -->
             <main class="p-4 sm:p-6 lg:p-8">
-                <!-- Stats cards -->
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="shadcn-card p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                </svg>
+                <!-- Dashboard content (shown by default) -->
+                <div id="dashboard-content" class="space-y-8">
+                    <!-- Stats cards -->
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="shadcn-card p-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Siswa</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">128</div>
+                                        </dd>
+                                    </dl>
+                                </div>
                             </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Siswa</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900">128</div>
-                                    </dd>
-                                </dl>
+                        </div>
+                        
+                        <div class="shadcn-card p-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Kelas</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">6</div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="shadcn-card p-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Jadwal Hari Ini</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">3</div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="shadcn-card p-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Event Mendatang</dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">2</div>
+                                        </dd>
+                                    </dl>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="shadcn-card p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                </svg>
+                    <!-- Recent activities and schedule -->
+                    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <!-- Recent activities -->
+                        <div class="shadcn-card overflow-hidden">
+                            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">Aktivitas Terkini</h3>
                             </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Kelas</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900">6</div>
-                                    </dd>
-                                </dl>
+                            <div class="bg-white overflow-hidden">
+                                <ul class="divide-y divide-gray-200">
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-blue-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Anda menambahkan nilai ujian</p>
+                                                <p class="text-sm text-gray-500">Kelas 9A - Matematika</p>
+                                                <p class="text-xs text-gray-400 mt-1">2 jam yang lalu</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-green-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Siswa baru ditambahkan</p>
+                                                <p class="text-sm text-gray-500">John Doe - Kelas 8B</p>
+                                                <p class="text-xs text-gray-400 mt-1">Kemarin, 15:32</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-purple-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Event baru dibuat</p>
+                                                <p class="text-sm text-gray-500">Field Trip ke Museum</p>
+                                                <p class="text-xs text-gray-400 mt-1">Kemarin, 10:15</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-yellow-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Poin gamifikasi diberikan</p>
+                                                <p class="text-sm text-gray-500">Kepada 5 siswa terbaik</p>
+                                                <p class="text-xs text-gray-400 mt-1">3 hari yang lalu</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="px-4 py-4 sm:px-6 border-t border-gray-200">
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Lihat semua aktivitas <span aria-hidden="true">&rarr;</span></a>
+                            </div>
+                        </div>
+                        
+                        <!-- Today's schedule -->
+                        <div class="shadcn-card overflow-hidden">
+                            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">Jadwal Hari Ini</h3>
+                            </div>
+                            <div class="bg-white overflow-hidden">
+                                <ul class="divide-y divide-gray-200">
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-blue-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Matematika</p>
+                                                <p class="text-sm text-gray-500">Kelas 9A - 08:00 - 09:30</p>
+                                                <div class="mt-2">
+                                                    <span class="shadcn-badge shadcn-badge-primary">Selesai</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-purple-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Fisika</p>
+                                                <p class="text-sm text-gray-500">Kelas 10B - 10:00 - 11:30</p>
+                                                <div class="mt-2">
+                                                    <span class="shadcn-badge shadcn-badge-secondary">Berlangsung</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 bg-green-100 rounded-md p-2">
+                                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-gray-900">Matematika</p>
+                                                <p class="text-sm text-gray-500">Kelas 8C - 13:00 - 14:30</p>
+                                                <div class="mt-2">
+                                                    <span class="shadcn-badge shadcn-badge-tertiary">Akan datang</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="px-4 py-4 sm:px-6 border-t border-gray-200">
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Lihat jadwal lengkap <span aria-hidden="true">&rarr;</span></a>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="shadcn-card p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Jadwal Hari Ini</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900">3</div>
-                                    </dd>
-                                </dl>
-                            </div>
+                    <!-- Quick actions -->
+                    <div class="mt-8">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Aksi Cepat</h3>
+                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                            <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                                <div class="bg-blue-100 rounded-full p-3 mb-3">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">Tambah Siswa</span>
+                            </a>
+                            <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                                <div class="bg-green-100 rounded-full p-3 mb-3">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">Input Nilai</span>
+                            </a>
+                            <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                                <div class="bg-yellow-100 rounded-full p-3 mb-3">
+                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">Presensi</span>
+                            </a>
+                            <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                                <div class="bg-purple-100 rounded-full p-3 mb-3">
+                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">Jurnal</span>
+                            </a>
+                            <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                                <div class="bg-red-100 rounded-full p-3 mb-3">
+                                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">Event</span>
+                            </a>
+                            <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
+                                <div class="bg-indigo-100 rounded-full p-3 mb-3">
+                                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">Modul</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kelas (Classes) CRUD page -->
+                <div id="kelas-content" class="space-y-6 hidden">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-900">Daftar Kelas</h2>
+                        <button id="btn-add-kelas" class="shadcn-btn shadcn-btn-primary">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Tambah Kelas
+                        </button>
+                    </div>
+                    
+                    <!-- Kelas table -->
+                    <div class="shadcn-card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kelas</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tingkat</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun Ajaran</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wali Kelas</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mata Pelajaran</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kelas-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Table rows will be dynamically inserted here -->
+                                    <tr class="text-center">
+                                        <td colspan="6" class="px-6 py-4 text-sm text-gray-500">
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     
-                    <div class="shadcn-card p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
+                    <!-- Kelas form modal -->
+                    <div id="kelas-form-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 id="kelas-form-title" class="text-xl font-semibold">Tambah Kelas</h3>
+                                <button id="btn-close-kelas-form" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
                             </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-gray-500 truncate">Event Mendatang</dt>
-                                    <dd class="flex items-baseline">
-                                        <div class="text-2xl font-semibold text-gray-900">2</div>
-                                    </dd>
-                                </dl>
+                            
+                            <form id="kelas-form">
+                                <input type="hidden" id="kelas-id" name="id">
+                                
+                                <div class="mb-4">
+                                    <label for="nama_kelas" class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas</label>
+                                    <input type="text" id="nama_kelas" name="nama_kelas" class="shadcn-input" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="tingkat" class="block text-sm font-medium text-gray-700 mb-1">Tingkat</label>
+                                    <select id="tingkat" name="tingkat" class="shadcn-input" required>
+                                        <option value="">Pilih Tingkat</option>
+                                        <option value="7">7 (SMP)</option>
+                                        <option value="8">8 (SMP)</option>
+                                        <option value="9">9 (SMP)</option>
+                                        <option value="10">10 (SMA)</option>
+                                        <option value="11">11 (SMA)</option>
+                                        <option value="12">12 (SMA)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="tahun_ajaran" class="block text-sm font-medium text-gray-700 mb-1">Tahun Ajaran</label>
+                                    <input type="text" id="tahun_ajaran" name="tahun_ajaran" class="shadcn-input" placeholder="contoh: 2023/2024" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="wali_kelas" class="block text-sm font-medium text-gray-700 mb-1">Wali Kelas</label>
+                                    <input type="text" id="wali_kelas" name="wali_kelas" class="shadcn-input" required>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <label for="mata_pelajaran" class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
+                                    <input type="text" id="mata_pelajaran" name="mata_pelajaran" class="shadcn-input" required>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3">
+                                    <button type="button" id="btn-cancel-kelas" class="shadcn-btn shadcn-btn-outline">
+                                        Batal
+                                    </button>
+                                    <button type="submit" class="shadcn-btn shadcn-btn-primary">
+                                        Simpan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Delete confirmation modal -->
+                    <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white rounded-lg max-w-md w-full p-6">
+                            <div class="mb-4 text-center">
+                                <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold">Konfirmasi Hapus</h3>
+                                <p class="text-gray-500 mt-2">Apakah Anda yakin ingin menghapus kelas ini? Tindakan ini tidak dapat dibatalkan.</p>
+                            </div>
+                            
+                            <div class="flex justify-center space-x-3">
+                                <button id="btn-cancel-delete" class="shadcn-btn shadcn-btn-outline">
+                                    Batal
+                                </button>
+                                <button id="btn-confirm-delete" class="shadcn-btn shadcn-btn-destructive">
+                                    Hapus
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Recent activities and schedule -->
-                <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <!-- Recent activities -->
-                    <div class="shadcn-card overflow-hidden">
-                        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Aktivitas Terkini</h3>
-                        </div>
-                        <div class="bg-white overflow-hidden">
-                            <ul class="divide-y divide-gray-200">
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Anda menambahkan nilai ujian</p>
-                                            <p class="text-sm text-gray-500">Kelas 9A - Matematika</p>
-                                            <p class="text-xs text-gray-400 mt-1">2 jam yang lalu</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-green-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Siswa baru ditambahkan</p>
-                                            <p class="text-sm text-gray-500">John Doe - Kelas 8B</p>
-                                            <p class="text-xs text-gray-400 mt-1">Kemarin, 15:32</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-purple-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Event baru dibuat</p>
-                                            <p class="text-sm text-gray-500">Field Trip ke Museum</p>
-                                            <p class="text-xs text-gray-400 mt-1">Kemarin, 10:15</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-yellow-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Poin gamifikasi diberikan</p>
-                                            <p class="text-sm text-gray-500">Kepada 5 siswa terbaik</p>
-                                            <p class="text-xs text-gray-400 mt-1">3 hari yang lalu</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="px-4 py-4 sm:px-6 border-t border-gray-200">
-                            <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Lihat semua aktivitas <span aria-hidden="true">&rarr;</span></a>
-                        </div>
-                    </div>
-                    
-                    <!-- Today's schedule -->
-                    <div class="shadcn-card overflow-hidden">
-                        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Jadwal Hari Ini</h3>
-                        </div>
-                        <div class="bg-white overflow-hidden">
-                            <ul class="divide-y divide-gray-200">
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Matematika</p>
-                                            <p class="text-sm text-gray-500">Kelas 9A - 08:00 - 09:30</p>
-                                            <div class="mt-2">
-                                                <span class="shadcn-badge shadcn-badge-primary">Selesai</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-purple-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Fisika</p>
-                                            <p class="text-sm text-gray-500">Kelas 10B - 10:00 - 11:30</p>
-                                            <div class="mt-2">
-                                                <span class="shadcn-badge shadcn-badge-secondary">Berlangsung</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 bg-green-100 rounded-md p-2">
-                                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="ml-4">
-                                            <p class="text-sm font-medium text-gray-900">Matematika</p>
-                                            <p class="text-sm text-gray-500">Kelas 8C - 13:00 - 14:30</p>
-                                            <div class="mt-2">
-                                                <span class="shadcn-badge shadcn-badge-tertiary">Akan datang</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="px-4 py-4 sm:px-6 border-t border-gray-200">
-                            <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Lihat jadwal lengkap <span aria-hidden="true">&rarr;</span></a>
-                        </div>
-                    </div>
+                <!-- Other content sections will go here -->
+                <div id="siswa-content" class="space-y-6 hidden">
+                    <!-- Siswa content will go here -->
                 </div>
                 
-                <!-- Quick actions -->
-                <div class="mt-8">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Aksi Cepat</h3>
-                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
-                            <div class="bg-blue-100 rounded-full p-3 mb-3">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">Tambah Siswa</span>
-                        </a>
-                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
-                            <div class="bg-green-100 rounded-full p-3 mb-3">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">Input Nilai</span>
-                        </a>
-                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
-                            <div class="bg-yellow-100 rounded-full p-3 mb-3">
-                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">Presensi</span>
-                        </a>
-                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
-                            <div class="bg-purple-100 rounded-full p-3 mb-3">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">Jurnal</span>
-                        </a>
-                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
-                            <div class="bg-red-100 rounded-full p-3 mb-3">
-                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">Event</span>
-                        </a>
-                        <a href="#" class="shadcn-card flex flex-col items-center justify-center p-6 text-center hover:bg-gray-50 transition-colors duration-150">
-                            <div class="bg-indigo-100 rounded-full p-3 mb-3">
-                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">Modul</span>
-                        </a>
-                    </div>
+                <div id="nilai-content" class="space-y-6 hidden">
+                    <!-- Nilai content will go here -->
                 </div>
+                
+                <!-- etc. for other sections -->
             </main>
         </div>
     </div>
@@ -570,12 +713,272 @@
         
         window.addEventListener('resize', handleResize);
         handleResize();
+        
+        // Sidebar menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all menu links
+            const menuLinks = document.querySelectorAll('#mobile-menu a, .sidebar a');
+            
+            // Add click event to each link
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    menuLinks.forEach(l => l.classList.remove('active-nav-item'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active-nav-item');
+                    
+                    // Update page title based on menu item
+                    const menuText = this.textContent.trim();
+                    document.querySelector('header h1').textContent = menuText;
+                    
+                    // Close mobile menu if open
+                    document.getElementById('mobile-menu').classList.remove('open');
+                    document.getElementById('mobile-menu-backdrop').classList.add('hidden');
+                    
+                    // Handle navigation (you can extend this logic)
+                    handleNavigation(menuText);
+                });
+            });
+            
+            // Function to handle navigation
+            function handleNavigation(section) {
+                console.log(`Navigated to: ${section}`);
+                
+                // Hide all content sections first
+                document.querySelectorAll('main > div[id$="-content"]').forEach(div => {
+                    div.classList.add('hidden');
+                });
+                
+                // Show the appropriate content based on section
+                switch(section) {
+                    case 'Dashboard':
+                        document.getElementById('dashboard-content').classList.remove('hidden');
+                        break;
+                    case 'Kelola Kelas':
+                        document.getElementById('kelas-content').classList.remove('hidden');
+                        loadKelasData();
+                        break;
+                    case 'Kelola Siswa':
+                        document.getElementById('siswa-content').classList.remove('hidden');
+                        loadSiswaData();
+                        break;
+                    // Add cases for other menu items
+                    default:
+                        // If no matching section, show dashboard
+                        document.getElementById('dashboard-content').classList.remove('hidden');
+                        break;
+                }
+            }
+            
+            // CRUD for Kelas (Classes)
+            let selectedKelasId = null;
+            
+            // Initialize Kelas UI components
+            const kelasFormModal = document.getElementById('kelas-form-modal');
+            const kelasForm = document.getElementById('kelas-form');
+            const btnAddKelas = document.getElementById('btn-add-kelas');
+            const btnCloseKelasForm = document.getElementById('btn-close-kelas-form');
+            const btnCancelKelas = document.getElementById('btn-cancel-kelas');
+            const kelasFormTitle = document.getElementById('kelas-form-title');
+            
+            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+            const btnCancelDelete = document.getElementById('btn-cancel-delete');
+            const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+            
+            // Show Kelas form for adding
+            btnAddKelas.addEventListener('click', function() {
+                kelasFormTitle.textContent = 'Tambah Kelas';
+                kelasForm.reset();
+                document.getElementById('kelas-id').value = '';
+                kelasFormModal.classList.remove('hidden');
+            });
+            
+            // Close form modal buttons
+            btnCloseKelasForm.addEventListener('click', function() {
+                kelasFormModal.classList.add('hidden');
+            });
+            
+            btnCancelKelas.addEventListener('click', function() {
+                kelasFormModal.classList.add('hidden');
+            });
+            
+            // Close delete confirm modal
+            btnCancelDelete.addEventListener('click', function() {
+                deleteConfirmModal.classList.add('hidden');
+            });
+            
+            // Handle Kelas form submission
+            kelasForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(kelasForm);
+                const kelasId = formData.get('id');
+                
+                try {
+                    let result;
+                    
+                    // Prepare data object from form
+                    const kelasData = {
+                        nama_kelas: formData.get('nama_kelas'),
+                        tingkat: formData.get('tingkat'),
+                        tahun_ajaran: formData.get('tahun_ajaran'),
+                        wali_kelas: formData.get('wali_kelas'),
+                        mata_pelajaran: formData.get('mata_pelajaran')
+                    };
+                    
+                    if (kelasId) {
+                        // Update existing kelas
+                        result = await updateKelas(kelasId, kelasData);
+                    } else {
+                        // Create new kelas
+                        result = await createKelas(kelasData);
+                    }
+                    
+                    if (result.success) {
+                        kelasFormModal.classList.add('hidden');
+                        loadKelasData(); // Reload the table
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error saving kelas:', error);
+                    alert('An error occurred while saving. Please try again.');
+                }
+            });
+            
+            // Delete confirmation
+            btnConfirmDelete.addEventListener('click', async function() {
+                if (!selectedKelasId) return;
+                
+                try {
+                    const result = await deleteKelas(selectedKelasId);
+                    if (result.success) {
+                        deleteConfirmModal.classList.add('hidden');
+                        loadKelasData(); // Reload the table
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error deleting kelas:', error);
+                    alert('An error occurred while deleting. Please try again.');
+                }
+            });
+            
+            // Load Kelas data
+            async function loadKelasData() {
+                try {
+                    const tableBody = document.getElementById('kelas-table-body');
+                    tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-gray-500">Loading...</td></tr>';
+                    
+                    const result = await getKelas();
+                    
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-gray-500">Tidak ada data kelas</td></tr>';
+                            return;
+                        }
+                        
+                        let tableContent = '';
+                        result.data.forEach(kelas => {
+                            tableContent += `
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kelas.nama_kelas}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.tingkat}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.tahun_ajaran}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.wali_kelas}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.mata_pelajaran}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="btn-edit-kelas text-blue-600 hover:text-blue-900 mr-3" data-id="${kelas.id}">Edit</button>
+                                        <button class="btn-delete-kelas text-red-600 hover:text-red-900" data-id="${kelas.id}">Hapus</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tableBody.innerHTML = tableContent;
+                        
+                        // Add event listeners to the edit buttons
+                        document.querySelectorAll('.btn-edit-kelas').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const kelasId = this.getAttribute('data-id');
+                                editKelas(kelasId);
+                            });
+                        });
+                        
+                        // Add event listeners to the delete buttons
+                        document.querySelectorAll('.btn-delete-kelas').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const kelasId = this.getAttribute('data-id');
+                                confirmDeleteKelas(kelasId);
+                            });
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-red-500">Error loading data</td></tr>';
+                        console.error('Error loading kelas data:', result.error);
+                    }
+                } catch (error) {
+                    const tableBody = document.getElementById('kelas-table-body');
+                    tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-red-500">Error loading data</td></tr>';
+                    console.error('Error loading kelas data:', error);
+                }
+            }
+            
+            // Function to edit a kelas
+            async function editKelas(kelasId) {
+                try {
+                    const result = await getKelas(kelasId);
+                    
+                    if (result.success && result.data) {
+                        const kelas = result.data;
+                        
+                        // Fill the form with data
+                        document.getElementById('kelas-id').value = kelas.id;
+                        document.getElementById('nama_kelas').value = kelas.nama_kelas;
+                        document.getElementById('tingkat').value = kelas.tingkat;
+                        document.getElementById('tahun_ajaran').value = kelas.tahun_ajaran;
+                        document.getElementById('wali_kelas').value = kelas.wali_kelas;
+                        document.getElementById('mata_pelajaran').value = kelas.mata_pelajaran;
+                        
+                        // Change title and show form
+                        kelasFormTitle.textContent = 'Edit Kelas';
+                        kelasFormModal.classList.remove('hidden');
+                    } else {
+                        alert('Error: ' + (result.error || 'Failed to load kelas data'));
+                    }
+                } catch (error) {
+                    console.error('Error loading kelas for edit:', error);
+                    alert('An error occurred while loading kelas data. Please try again.');
+                }
+            }
+            
+            // Function to confirm kelas deletion
+            function confirmDeleteKelas(kelasId) {
+                selectedKelasId = kelasId;
+                deleteConfirmModal.classList.remove('hidden');
+            }
+            
+            // Example data loading functions
+            async function loadSiswaData() {
+                try {
+                    const result = await getSiswa();
+                    if (result.success) {
+                        console.log('Siswa data loaded:', result.data);
+                        // You would update the UI here with the data
+                    }
+                } catch (error) {
+                    console.error('Failed to load siswa data:', error);
+                }
+            }
+        });
     </script>
 
     <!-- API Integration following CORS bypass rules -->
     <script>
         // Replace with your deployed Google Apps Script web app URL
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxAj9G8qyctumNy7l8iA3BFRwx5uL2XgNekulVhKS-McLMOcpEixHiQ6qIa9tN9NZodXw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwBvooMKR00Q5Sp1rABOqrJ37mKDNREx2UbCsIwr0dIExwsNl9w7Kqt6o3I1nJeucU6/exec';
         
         // Generic API function for making requests to the GAS backend
         async function callApi(action, params = {}) {
@@ -815,10 +1218,12 @@
         
         function showLoginForm() {
             document.getElementById('login-overlay').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('visible');
         }
         
         function hideLoginForm() {
             document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('main-content').classList.add('visible');
         }
         
         function updateUserInfo(user) {
@@ -883,13 +1288,262 @@
                 });
             });
             
-            // You can uncomment these when you've deployed your Google Apps Script backend
-            // const kelasData = await getKelas();
-            // const siswaData = await getSiswa();
-            // console.log("Data loaded:", { kelas: kelasData, siswa: siswaData });
+            // Sidebar menu functionality
+            const menuLinks = document.querySelectorAll('#mobile-menu a, .sidebar a');
             
-            // For now just log a message
-            console.log("API integration ready. Deploy your Google Apps Script backend to enable data fetching.");
+            // Add click event to each link
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    menuLinks.forEach(l => l.classList.remove('active-nav-item'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active-nav-item');
+                    
+                    // Update page title based on menu item
+                    const menuText = this.textContent.trim();
+                    document.querySelector('header h1').textContent = menuText;
+                    
+                    // Close mobile menu if open
+                    document.getElementById('mobile-menu').classList.remove('open');
+                    document.getElementById('mobile-menu-backdrop').classList.add('hidden');
+                    
+                    // Handle navigation (you can extend this logic)
+                    handleNavigation(menuText);
+                });
+            });
+            
+            // Function to handle navigation
+            function handleNavigation(section) {
+                console.log(`Navigated to: ${section}`);
+                
+                // Hide all content sections first
+                document.querySelectorAll('main > div[id$="-content"]').forEach(div => {
+                    div.classList.add('hidden');
+                });
+                
+                // Show the appropriate content based on section
+                switch(section) {
+                    case 'Dashboard':
+                        document.getElementById('dashboard-content').classList.remove('hidden');
+                        break;
+                    case 'Kelola Kelas':
+                        document.getElementById('kelas-content').classList.remove('hidden');
+                        loadKelasData();
+                        break;
+                    case 'Kelola Siswa':
+                        document.getElementById('siswa-content').classList.remove('hidden');
+                        loadSiswaData();
+                        break;
+                    // Add cases for other menu items
+                    default:
+                        // If no matching section, show dashboard
+                        document.getElementById('dashboard-content').classList.remove('hidden');
+                        break;
+                }
+            }
+            
+            // CRUD for Kelas (Classes)
+            let selectedKelasId = null;
+            
+            // Initialize Kelas UI components
+            const kelasFormModal = document.getElementById('kelas-form-modal');
+            const kelasForm = document.getElementById('kelas-form');
+            const btnAddKelas = document.getElementById('btn-add-kelas');
+            const btnCloseKelasForm = document.getElementById('btn-close-kelas-form');
+            const btnCancelKelas = document.getElementById('btn-cancel-kelas');
+            const kelasFormTitle = document.getElementById('kelas-form-title');
+            
+            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+            const btnCancelDelete = document.getElementById('btn-cancel-delete');
+            const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+            
+            // Show Kelas form for adding
+            btnAddKelas.addEventListener('click', function() {
+                kelasFormTitle.textContent = 'Tambah Kelas';
+                kelasForm.reset();
+                document.getElementById('kelas-id').value = '';
+                kelasFormModal.classList.remove('hidden');
+            });
+            
+            // Close form modal buttons
+            btnCloseKelasForm.addEventListener('click', function() {
+                kelasFormModal.classList.add('hidden');
+            });
+            
+            btnCancelKelas.addEventListener('click', function() {
+                kelasFormModal.classList.add('hidden');
+            });
+            
+            // Close delete confirm modal
+            btnCancelDelete.addEventListener('click', function() {
+                deleteConfirmModal.classList.add('hidden');
+            });
+            
+            // Handle Kelas form submission
+            kelasForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(kelasForm);
+                const kelasId = formData.get('id');
+                
+                try {
+                    let result;
+                    
+                    // Prepare data object from form
+                    const kelasData = {
+                        nama_kelas: formData.get('nama_kelas'),
+                        tingkat: formData.get('tingkat'),
+                        tahun_ajaran: formData.get('tahun_ajaran'),
+                        wali_kelas: formData.get('wali_kelas'),
+                        mata_pelajaran: formData.get('mata_pelajaran')
+                    };
+                    
+                    if (kelasId) {
+                        // Update existing kelas
+                        result = await updateKelas(kelasId, kelasData);
+                    } else {
+                        // Create new kelas
+                        result = await createKelas(kelasData);
+                    }
+                    
+                    if (result.success) {
+                        kelasFormModal.classList.add('hidden');
+                        loadKelasData(); // Reload the table
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error saving kelas:', error);
+                    alert('An error occurred while saving. Please try again.');
+                }
+            });
+            
+            // Delete confirmation
+            btnConfirmDelete.addEventListener('click', async function() {
+                if (!selectedKelasId) return;
+                
+                try {
+                    const result = await deleteKelas(selectedKelasId);
+                    if (result.success) {
+                        deleteConfirmModal.classList.add('hidden');
+                        loadKelasData(); // Reload the table
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('Error deleting kelas:', error);
+                    alert('An error occurred while deleting. Please try again.');
+                }
+            });
+            
+            // Load Kelas data
+            async function loadKelasData() {
+                try {
+                    const tableBody = document.getElementById('kelas-table-body');
+                    tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-gray-500">Loading...</td></tr>';
+                    
+                    const result = await getKelas();
+                    
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-gray-500">Tidak ada data kelas</td></tr>';
+                            return;
+                        }
+                        
+                        let tableContent = '';
+                        result.data.forEach(kelas => {
+                            tableContent += `
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${kelas.nama_kelas}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.tingkat}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.tahun_ajaran}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.wali_kelas}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kelas.mata_pelajaran}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="btn-edit-kelas text-blue-600 hover:text-blue-900 mr-3" data-id="${kelas.id}">Edit</button>
+                                        <button class="btn-delete-kelas text-red-600 hover:text-red-900" data-id="${kelas.id}">Hapus</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tableBody.innerHTML = tableContent;
+                        
+                        // Add event listeners to the edit buttons
+                        document.querySelectorAll('.btn-edit-kelas').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const kelasId = this.getAttribute('data-id');
+                                editKelas(kelasId);
+                            });
+                        });
+                        
+                        // Add event listeners to the delete buttons
+                        document.querySelectorAll('.btn-delete-kelas').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const kelasId = this.getAttribute('data-id');
+                                confirmDeleteKelas(kelasId);
+                            });
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-red-500">Error loading data</td></tr>';
+                        console.error('Error loading kelas data:', result.error);
+                    }
+                } catch (error) {
+                    const tableBody = document.getElementById('kelas-table-body');
+                    tableBody.innerHTML = '<tr class="text-center"><td colspan="6" class="px-6 py-4 text-sm text-red-500">Error loading data</td></tr>';
+                    console.error('Error loading kelas data:', error);
+                }
+            }
+            
+            // Function to edit a kelas
+            async function editKelas(kelasId) {
+                try {
+                    const result = await getKelas(kelasId);
+                    
+                    if (result.success && result.data) {
+                        const kelas = result.data;
+                        
+                        // Fill the form with data
+                        document.getElementById('kelas-id').value = kelas.id;
+                        document.getElementById('nama_kelas').value = kelas.nama_kelas;
+                        document.getElementById('tingkat').value = kelas.tingkat;
+                        document.getElementById('tahun_ajaran').value = kelas.tahun_ajaran;
+                        document.getElementById('wali_kelas').value = kelas.wali_kelas;
+                        document.getElementById('mata_pelajaran').value = kelas.mata_pelajaran;
+                        
+                        // Change title and show form
+                        kelasFormTitle.textContent = 'Edit Kelas';
+                        kelasFormModal.classList.remove('hidden');
+                    } else {
+                        alert('Error: ' + (result.error || 'Failed to load kelas data'));
+                    }
+                } catch (error) {
+                    console.error('Error loading kelas for edit:', error);
+                    alert('An error occurred while loading kelas data. Please try again.');
+                }
+            }
+            
+            // Function to confirm kelas deletion
+            function confirmDeleteKelas(kelasId) {
+                selectedKelasId = kelasId;
+                deleteConfirmModal.classList.remove('hidden');
+            }
+            
+            // Example data loading functions
+            async function loadSiswaData() {
+                try {
+                    const result = await getSiswa();
+                    if (result.success) {
+                        console.log('Siswa data loaded:', result.data);
+                        // You would update the UI here with the data
+                    }
+                } catch (error) {
+                    console.error('Failed to load siswa data:', error);
+                }
+            }
         });
     </script>
 </body>
