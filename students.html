@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siswa - Teacher Administration Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="shadcn-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Load required API and layout scripts -->
+    <script src="js/student-api.js"></script>
+    <script src="js/layout.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: hsl(var(--background));
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="flex h-screen bg-gray-50 overflow-hidden">
+        <!-- Sidebar container -->
+        <div id="sidebar-container" class="w-64 bg-white shadow-md hidden md:block"></div>
+        
+        <!-- Main container -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header container -->
+            <div id="header-container"></div>
+            
+            <!-- Content container -->
+            <div class="flex-1 overflow-auto p-4">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl font-semibold">Siswa</h2>
+                    <button id="add-student-btn" class="shadcn-btn shadcn-btn-primary flex items-center">
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Tambah Siswa
+                    </button>
+                </div>
+                
+                <!-- Filter container -->
+                <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                    <div class="p-4">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1">
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="search-input">
+                                    Cari Siswa
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="search-input" class="shadcn-input pl-10" placeholder="Cari berdasarkan nama, NIS, atau kelas...">
+                                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="filter-class">
+                                    Filter Kelas
+                                </label>
+                                <select id="filter-class" class="shadcn-select">
+                                    <option value="">Semua Kelas</option>
+                                    <!-- Will be populated from classes data -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Students table -->
+                <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                    <div id="students-container" class="w-full overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIS</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Kelamin</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Lahir</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="students-table-body">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                        Memuat data siswa...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Student Modal -->
+    <div id="student-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold" id="modal-title">Tambah Siswa</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="student-form">
+                <input type="hidden" id="student-id">
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nama">
+                        Nama Lengkap
+                    </label>
+                    <input id="nama" type="text" class="shadcn-input" placeholder="Nama lengkap siswa" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nis">
+                        NIS
+                    </label>
+                    <input id="nis" type="text" class="shadcn-input" placeholder="Nomor Induk Siswa" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="kelas">
+                        Kelas
+                    </label>
+                    <select id="kelas" class="shadcn-select" required>
+                        <option value="">Pilih Kelas</option>
+                        <!-- Will be populated from classes data -->
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Jenis Kelamin
+                    </label>
+                    <div class="flex gap-4">
+                        <div class="flex items-center">
+                            <input id="gender-male" type="radio" name="gender" value="Laki-laki" class="mr-2" required>
+                            <label for="gender-male">Laki-laki</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="gender-female" type="radio" name="gender" value="Perempuan" class="mr-2">
+                            <label for="gender-female">Perempuan</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tanggal-lahir">
+                        Tanggal Lahir
+                    </label>
+                    <input id="tanggal-lahir" type="date" class="shadcn-input" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="alamat">
+                        Alamat
+                    </label>
+                    <textarea id="alamat" class="shadcn-input" placeholder="Alamat lengkap" rows="2"></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="no-telp">
+                        Nomor Telepon
+                    </label>
+                    <input id="no-telp" type="tel" class="shadcn-input" placeholder="Nomor telepon orang tua/wali">
+                </div>
+                
+                <div class="flex justify-end mt-6">
+                    <button type="button" id="cancel-btn" class="shadcn-btn shadcn-btn-outline mr-2">
+                        Batal
+                    </button>
+                    <button type="submit" class="shadcn-btn shadcn-btn-primary">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal-overlay hidden">
+        <div class="modal max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Konfirmasi Hapus</h3>
+                <button id="close-delete-modal-btn" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <p class="mb-4">Apakah Anda yakin ingin menghapus siswa <span id="delete-student-name" class="font-semibold"></span>?</p>
+            <p class="text-red-500 text-sm mb-6">Tindakan ini tidak dapat dibatalkan.</p>
+            
+            <div class="flex justify-end">
+                <button type="button" id="cancel-delete-btn" class="shadcn-btn shadcn-btn-outline mr-2">
+                    Batal
+                </button>
+                <button type="button" id="confirm-delete-btn" class="shadcn-btn bg-red-500 hover:bg-red-600 text-white">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize layout
+            initLayout();
+            updatePageTitle('Siswa');
+            
+            // Load students and classes data
+            loadData();
+            
+            // Event listeners
+            document.getElementById('add-student-btn').addEventListener('click', showAddModal);
+            document.getElementById('close-modal-btn').addEventListener('click', hideModal);
+            document.getElementById('cancel-btn').addEventListener('click', hideModal);
+            document.getElementById('student-form').addEventListener('submit', handleSubmit);
+            
+            // Delete modal event listeners
+            document.getElementById('close-delete-modal-btn').addEventListener('click', hideDeleteModal);
+            document.getElementById('cancel-delete-btn').addEventListener('click', hideDeleteModal);
+            document.getElementById('confirm-delete-btn').addEventListener('click', deleteStudent);
+            
+            // Search and filter functionality
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            document.getElementById('filter-class').addEventListener('change', applyFilters);
+        });
+        
+        // Global variables
+        let students = [];
+        let classes = [];
+        
+        // Load students and classes data
+        async function loadData() {
+            try {
+                showLoading('students-table-body');
+                
+                // Check for cached data first
+                const cachedClasses = localStorage.getItem('admin_classes');
+                const classesCache = cachedClasses ? JSON.parse(cachedClasses) : null;
+                const cacheTimestamp = localStorage.getItem('admin_classes_timestamp');
+                const cacheAge = cacheTimestamp ? (Date.now() - parseInt(cacheTimestamp)) : Infinity;
+                const cacheValid = cacheAge < 3600000; // 1 hour cache validity
+                
+                // Load both classes and students in parallel
+                const [classesResult, studentsResult] = await Promise.all([
+                    // Classes data - use cache if valid, otherwise fetch
+                    (async () => {
+                        if (classesCache && cacheValid) {
+                            console.log('Using cached classes data');
+                            return { success: true, data: classesCache };
+                        }
+                        
+                        try {
+                            // First try using the getKelas function from api.js
+                            const response = await getKelas();
+                            console.log('Classes API response:', response);
+                            
+                            if (response && response.success) {
+                                // Cache valid response
+                                localStorage.setItem('admin_classes', JSON.stringify(response.data));
+                                localStorage.setItem('admin_classes_timestamp', Date.now().toString());
+                                return response;
+                            }
+                            throw new Error('Failed to load classes');
+                        } catch (error) {
+                            console.warn('Error in getKelas, trying fallback:', error);
+                            
+                            // Try multiple fallback methods
+                            try {
+                                console.log('Trying fallback method for loading classes...');
+                                const fallbackResponse = await fetch(`${API_URL}?action=getKelas`, {
+                                    method: 'GET'
+                                }).then(res => {
+                                    if (!res.ok) throw new Error('Network response was not ok');
+                                    return res.json();
+                                });
+                                
+                                if (fallbackResponse && fallbackResponse.success) {
+                                    localStorage.setItem('admin_classes', JSON.stringify(fallbackResponse.data));
+                                    localStorage.setItem('admin_classes_timestamp', Date.now().toString());
+                                    return fallbackResponse;
+                                }
+                                
+                                // Try POST as last resort
+                                console.log('Trying POST method for loading classes...');
+                                const formData = new URLSearchParams();
+                                formData.append('action', 'getKelas');
+                                
+                                const postResponse = await fetch(API_URL, {
+                                    method: 'POST',
+                                    body: formData
+                                }).then(res => res.json());
+                                
+                                if (postResponse && postResponse.success) {
+                                    localStorage.setItem('admin_classes', JSON.stringify(postResponse.data));
+                                    localStorage.setItem('admin_classes_timestamp', Date.now().toString());
+                                }
+                                return postResponse;
+                            } catch (fallbackError) {
+                                console.error('All class loading methods failed:', fallbackError);
+                                return { success: false, error: fallbackError.message };
+                            }
+                        }
+                    })(),
+                    
+                    // Students data
+                    (async () => {
+                        try {
+                            // First try GET method
+                            console.log('Trying GET method for loading students...');
+                            const response = await fetch(`${API_URL}?action=getSiswa`, {
+                                method: 'GET'
+                            }).then(res => {
+                                if (!res.ok) throw new Error('Network response was not ok');
+                                return res.json();
+                            });
+                            
+                            console.log('Students API response (GET):', response);
+                            if (response && response.success) return response;
+                            throw new Error('Failed to load students with GET method');
+                        } catch (error) {
+                            console.warn('Error in GET method, trying POST fallback:', error);
+                            
+                            // Try POST method with URLSearchParams
+                            console.log('Trying POST method for loading students...');
+                            const formData = new URLSearchParams();
+                            formData.append('action', 'getSiswa');
+                            
+                            return fetch(API_URL, {
+                                method: 'POST',
+                                body: formData
+                            }).then(res => res.json());
+                        }
+                    })()
+                ]);
+                
+                // Process results
+                if (classesResult && classesResult.success) {
+                    classes = classesResult.data || [];
+                    populateClassDropdowns();
+                } else {
+                    console.error('Failed to load classes with all methods');
+                }
+                
+                if (studentsResult && studentsResult.success) {
+                    students = studentsResult.data || [];
+                    // Ensure all student objects have proper id and siswa_id properties
+                    students = students.map(student => {
+                        // Normalize the ID properties
+                        const id = student.id || student.siswa_id || '';
+                        // Generate a random ID if none exists
+                        const safeId = id || ('generated-' + Math.random().toString(36).substring(2, 9));
+                        return {
+                            ...student,
+                            id: String(safeId),
+                            siswa_id: String(safeId)
+                        };
+                    });
+                    console.log('Normalized student data:', students);
+                    renderStudentsTable(students);
+                } else {
+                    showError('students-table-body', 'Gagal memuat data siswa dengan semua metode. Silakan refresh halaman.');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('students-table-body', 'Terjadi kesalahan saat memuat data. Periksa konsol untuk detail.');
+            }
+        }
+        
+        // Populate class dropdowns in filter and form
+        function populateClassDropdowns() {
+            if (!classes || !Array.isArray(classes) || classes.length === 0) {
+                console.warn('No classes available to populate dropdowns');
+                return;
+            }
+            
+            // Sort classes by name
+            classes.sort((a, b) => {
+                const nameA = a.nama || a.nama_kelas || '';
+                const nameB = b.nama || b.nama_kelas || '';
+                return nameA.localeCompare(nameB);
+            });
+            
+            // Filter dropdown
+            const filterSelect = document.getElementById('filter-class');
+            if (filterSelect) {
+                filterSelect.innerHTML = '<option value="">Semua Kelas</option>';
+                
+                // Add options
+                classes.forEach(kelas => {
+                    const id = kelas.id || kelas.kelas_id;
+                    const nama = kelas.nama || kelas.nama_kelas || 'Kelas Tanpa Nama';
+                    
+                    if (id) {
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = nama;
+                        filterSelect.appendChild(option);
+                    }
+                });
+            }
+            
+            // Form select
+            const formSelect = document.getElementById('kelas');
+            if (formSelect) {
+                formSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+                
+                // Add options
+                classes.forEach(kelas => {
+                    const id = kelas.id || kelas.kelas_id;
+                    const nama = kelas.nama || kelas.nama_kelas || 'Kelas Tanpa Nama';
+                    
+                    if (id) {
+                        const option = document.createElement('option');
+                        option.value = id;
+                        option.textContent = nama;
+                        formSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+        
+        // Render students table
+        function renderStudentsTable(data) {
+            const tableBody = document.getElementById('students-table-body');
+            
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        Belum ada data siswa
+                    </td>
+                </tr>
+                `;
+                return;
+            }
+            
+            console.log('Rendering students:', data);
+            
+            let html = '';
+            data.forEach(siswa => {
+                // Handle different property naming conventions
+                const id = siswa.id || siswa.siswa_id;
+                const nama = siswa.nama || siswa.nama_siswa || '-';
+                const nis = siswa.nis || siswa.nomor_induk || '-';
+                const kelasId = siswa.kelas || siswa.kelas_id;
+                const jenisKelamin = siswa.jenisKelamin || siswa.jenis_kelamin || '-';
+                const tanggalLahir = siswa.tanggalLahir || siswa.tanggal_lahir || '';
+                
+                // Print the full student object for debugging
+                console.log('Student data structure:', JSON.stringify(siswa));
+                
+                // Find class name from class ID
+                const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
+                const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas) : '-';
+                
+                console.log(`Rendering student row with ID: ${id}, type: ${typeof id}`);
+                
+                // Ensure ID is not undefined or empty
+                const safeId = id ? id : 'no-id-' + Math.random().toString(36).substring(2, 9);
+                
+                html += `
+                <tr data-student-id="${safeId}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">${nama}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${nis}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${kelasNama}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${jenisKelamin}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${formatDate(tanggalLahir)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="edit-btn text-blue-600 hover:text-blue-900 mr-3" onclick="showEditModal('${safeId}')">
+                            Edit
+                        </button>
+                        <button class="delete-btn text-red-600 hover:text-red-900" onclick="showDeleteModal('${safeId}')">
+                            Hapus
+                        </button>
+                    </td>
+                </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Format date from ISO string to local date format
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date)) return dateString; // Return original if not valid date
+                
+                return date.toLocaleDateString();
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return dateString; // Return original on error
+            }
+        }
+        
+        // Apply search and filter
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const classFilter = document.getElementById('filter-class').value;
+            
+            let filteredStudents = students;
+            
+            // Apply class filter
+            if (classFilter) {
+                filteredStudents = filteredStudents.filter(student => {
+                    const studentKelasId = student.kelas || student.kelas_id;
+                    return studentKelasId === classFilter;
+                });
+            }
+            
+            // Apply search term
+            if (searchTerm) {
+                filteredStudents = filteredStudents.filter(student => {
+                    const nama = (student.nama || student.nama_siswa || '').toLowerCase();
+                    const nis = (student.nis || student.nomor_induk || '').toLowerCase();
+                    const kelasId = student.kelas || student.kelas_id;
+                    
+                    // Get class name
+                    const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
+                    const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '').toLowerCase() : '';
+                    
+                    return nama.includes(searchTerm) || 
+                           nis.includes(searchTerm) || 
+                           kelasNama.includes(searchTerm);
+                });
+            }
+            
+            renderStudentsTable(filteredStudents);
+        }
+        
+        // Show modal for adding a new student
+        function showAddModal() {
+            document.getElementById('modal-title').textContent = 'Tambah Siswa';
+            document.getElementById('student-id').value = '';
+            document.getElementById('student-form').reset();
+            document.getElementById('student-modal').classList.remove('hidden');
+        }
+        
+        // Show modal for editing a student
+        function showEditModal(id) {
+            console.log("showEditModal called with ID:", id);
+            // Normalize id to string for comparison
+            const idStr = String(id);
+            const siswa = students.find(s => String(s.id) === idStr || String(s.siswa_id) === idStr);
+            console.log("Found student object:", siswa);
+            if (!siswa) {
+                console.error("Student not found with ID:", id);
+                alert("Error: Student not found with ID: " + id);
+                return;
+            }
+            
+            // Handle different property naming conventions
+            const nama = siswa.nama || siswa.nama_siswa || '';
+            const nis = siswa.nis || siswa.nomor_induk || '';
+            const kelasId = siswa.kelas || siswa.kelas_id || '';
+            const jenisKelamin = siswa.jenisKelamin || siswa.jenis_kelamin || '';
+            const tanggalLahir = siswa.tanggalLahir || siswa.tanggal_lahir || '';
+            const alamat = siswa.alamat || '';
+            const noTelp = siswa.noTelp || siswa.no_telp || siswa.telepon || '';
+            
+            document.getElementById('modal-title').textContent = 'Edit Siswa';
+            document.getElementById('student-id').value = id;
+            document.getElementById('nama').value = nama;
+            document.getElementById('nis').value = nis;
+            document.getElementById('kelas').value = kelasId;
+            
+            // Set gender radio
+            if (jenisKelamin === 'Laki-laki') {
+                document.getElementById('gender-male').checked = true;
+            } else if (jenisKelamin === 'Perempuan') {
+                document.getElementById('gender-female').checked = true;
+            }
+            
+            document.getElementById('tanggal-lahir').value = formatDateForInput(tanggalLahir);
+            document.getElementById('alamat').value = alamat;
+            document.getElementById('no-telp').value = noTelp;
+            
+            document.getElementById('student-modal').classList.remove('hidden');
+        }
+        
+        // Format date for input field (YYYY-MM-DD)
+        function formatDateForInput(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date)) return dateString;
+                
+                return date.toISOString().split('T')[0];
+            } catch (error) {
+                console.error('Error formatting date for input:', error);
+                return dateString;
+            }
+        }
+        
+        // Hide the modal
+        function hideModal() {
+            document.getElementById('student-modal').classList.add('hidden');
+        }
+        
+        // Show delete confirmation modal
+        function showDeleteModal(id) {
+            console.log("showDeleteModal called with ID:", id, "Type:", typeof id);
+            
+            // Check if we have a proper ID
+            if (!id || id === 'undefined') {
+                console.error("Invalid ID received:", id);
+                alert("Error: Invalid student ID");
+                return;
+            }
+            
+            // Normalize id to string for comparison
+            const idStr = String(id);
+            
+            // Find the student in the students array
+            const siswa = students.find(s => {
+                console.log("Comparing student:", 
+                    "ID from student:", s.id, "type:", typeof s.id,
+                    "siswa_id from student:", s.siswa_id, "type:", typeof s.siswa_id,
+                    "Looking for:", idStr);
+                return String(s.id) === idStr || String(s.siswa_id) === idStr;
+            });
+            
+            console.log("Found student object:", siswa);
+            console.log("Student object keys:", siswa ? Object.keys(siswa) : "No student found");
+            
+            if (!siswa) {
+                console.error("Student not found with ID:", id);
+                alert("Error: Student not found with ID: " + id);
+                return;
+            }
+            
+            // Set deleteStudentId as a global variable
+            window.deleteStudentId = id;
+            console.log("Set deleteStudentId to:", window.deleteStudentId);
+            
+            document.getElementById('delete-student-name').textContent = siswa.nama || siswa.nama_siswa;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+        
+        // Hide delete confirmation modal
+        function hideDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            // Don't clear deleteStudentId here
+        }
+        
+        // Handle form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('student-id').value;
+            const isEdit = !!id;
+            
+            console.log('Form submission - isEdit:', isEdit, 'ID:', id);
+            
+            // Get gender value from radio buttons
+            let gender = '';
+            if (document.getElementById('gender-male').checked) {
+                gender = 'Laki-laki';
+            } else if (document.getElementById('gender-female').checked) {
+                gender = 'Perempuan';
+            }
+            
+            // Standardize property names to match what the backend expects
+            const siswaData = {
+                nama: document.getElementById('nama').value,
+                nis: document.getElementById('nis').value,
+                kelas: document.getElementById('kelas').value,
+                jenisKelamin: gender,
+                tanggalLahir: document.getElementById('tanggal-lahir').value,
+                alamat: document.getElementById('alamat').value,
+                noTelp: document.getElementById('no-telp').value
+            };
+            
+            // Add alternate field names for compatibility
+            siswaData.nama_siswa = siswaData.nama;
+            siswaData.nomor_induk = siswaData.nis;
+            siswaData.kelas_id = siswaData.kelas;
+            siswaData.jenis_kelamin = siswaData.jenisKelamin;
+            siswaData.tanggal_lahir = siswaData.tanggalLahir;
+            siswaData.no_telp = siswaData.noTelp;
+            siswaData.telepon = siswaData.noTelp;
+            
+            // For edit operations, include both ID field formats
+            if (isEdit) {
+                siswaData.id = id;
+                siswaData.siswa_id = id;
+            }
+            
+            try {
+                // First try standard API functions if available (like in classes.html)
+                let response;
+                try {
+                    if (isEdit) {
+                        // Update existing student
+                        response = await updateSiswa(id, siswaData);
+                    } else {
+                        // Add new student
+                        response = await createSiswa(siswaData);
+                    }
+                } catch (functionError) {
+                    console.warn('API function error:', functionError);
+                    
+                    // Fall back to direct API call with POST
+                    console.log('Trying direct API call for saving student...');
+                    const formData = new URLSearchParams();
+                    formData.append('action', isEdit ? 'updateSiswa' : 'createSiswa');
+                    if (isEdit) formData.append('id', id);
+                    
+                    // Add all data properties
+                    for (const key in siswaData) {
+                        formData.append(key, siswaData[key]);
+                    }
+                    
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    }).then(res => res.json()).catch(err => {
+                        console.error('API Error:', err);
+                        return { success: false, error: err.message };
+                    });
+                }
+                
+                if (response && response.success) {
+                    hideModal();
+                    await loadData();
+                    applyFilters(); // Re-apply any active filters
+                } else {
+                    const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
+                    alert(`Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} siswa: ${errorMsg}`);
+                }
+            } catch (error) {
+                console.error('Error saving student:', error);
+                alert(`Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} siswa. Periksa konsol untuk detail.`);
+            }
+        }
+        
+        // Delete student
+        async function deleteStudent() {
+            // Use the global variable
+            const studentIdToDelete = window.deleteStudentId;
+            console.log('Deleting student with ID (from global var):', studentIdToDelete);
+            
+            if (!studentIdToDelete || studentIdToDelete === 'undefined') {
+                console.error('Invalid student ID to delete:', studentIdToDelete);
+                alert('Error: Invalid student ID to delete');
+                return;
+            }
+            
+            // Find the student in the array to confirm it exists
+            const studentToDelete = students.find(s => 
+                String(s.id) === String(studentIdToDelete) || 
+                String(s.siswa_id) === String(studentIdToDelete)
+            );
+            
+            if (!studentToDelete) {
+                console.error('Student not found in local data with ID:', studentIdToDelete);
+                // Continue anyway as the backend might have the record
+            } else {
+                console.log('Found student to delete:', studentToDelete);
+            }
+            
+            try {
+                // First try standard API function
+                let response;
+                try {
+                    response = await deleteSiswa(studentIdToDelete);
+                    console.log('deleteSiswa API response:', response);
+                } catch (functionError) {
+                    console.warn('API function error:', functionError);
+                    
+                    // Fall back to direct API call
+                    console.log('Trying direct API call for deleting student...');
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'deleteSiswa');
+                    formData.append('id', String(studentIdToDelete));
+                    formData.append('siswa_id', String(studentIdToDelete));
+                    
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    }).then(res => res.json()).catch(err => {
+                        console.error('API Error:', err);
+                        return { success: false, error: err.message };
+                    });
+                    console.log('Direct API response:', response);
+                }
+                
+                if (response && response.success) {
+                    hideDeleteModal();
+                    // Clear the ID after successful deletion
+                    window.deleteStudentId = null;
+                    await loadData();
+                    applyFilters(); // Re-apply any active filters
+                } else {
+                    const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
+                    alert(`Gagal menghapus siswa: ${errorMsg}`);
+                }
+            } catch (error) {
+                console.error('Error deleting student:', error);
+                alert('Terjadi kesalahan saat menghapus siswa. Periksa konsol untuk detail.');
+            }
+        }
+        
+        // Helper functions for showing loading/error states
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        <svg class="animate-spin h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Memuat data siswa...
+                    </td>
+                </tr>
+                `;
+            }
+        }
+        
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                        <svg class="h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        ${message}
+                    </td>
+                </tr>
+                `;
+            }
+        }
+        
+        // Add a method to clear cache if needed
+        function clearDataCache() {
+            localStorage.removeItem('admin_classes');
+            localStorage.removeItem('admin_classes_timestamp');
+            console.log('Data cache cleared');
+        }
+    </script>
+</body>
+</html> 

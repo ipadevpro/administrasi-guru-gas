@@ -3,8 +3,10 @@
 
 // src/services/api.ts
 
-// Replace with your deployed Google Apps Script web app URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbwBvooMKR00Q5Sp1rABOqrJ37mKDNREx2UbCsIwr0dIExwsNl9w7Kqt6o3I1nJeucU6/exec';
+// 1. API Service Declaration
+
+// Define the Base URL for API
+const API_URL = 'https://script.google.com/macros/s/AKfycbw1JidqGTGHctOX6e-eX6I_TWVYxJ8t6scGLorrVrAE6aQJ4lU3WZG2VyU-Wnd1_xT-wA/exec';
 
 // Generic API function for making requests to the GAS backend
 // This maintains the CORS bypass approach
