@@ -31,9 +31,74 @@
                 transform: translateX(0);
             }
         }
+        
+        /* Login form styles */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .login-form {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-form">
+            <div class="flex justify-center mb-6">
+                <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-center mb-6">Login to EduAdmin</h2>
+            
+            <div id="login-error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 hidden">
+                <span id="login-error-message">Invalid username or password</span>
+            </div>
+            
+            <form id="login-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                        Username
+                    </label>
+                    <input id="username" type="text" class="shadcn-input" placeholder="Enter your username" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                        Password
+                    </label>
+                    <input id="password" type="password" class="shadcn-input" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="shadcn-btn shadcn-btn-primary w-full py-2 px-4">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="flex h-screen overflow-hidden">
         <!-- Mobile sidebar backdrop -->
         <div id="mobile-menu-backdrop" class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden hidden"></div>
@@ -56,11 +121,11 @@
             <div class="px-4 py-6">
                 <div class="flex items-center px-4 py-3 bg-blue-50 rounded-lg shadcn-card">
                     <div class="shadcn-avatar">
-                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile">
+                        <img id="sidebar-user-avatar" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile">
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Sarah Johnson</p>
-                        <p class="text-sm text-gray-500">Guru Matematika</p>
+                        <p id="sidebar-user-name" class="text-sm font-medium text-gray-900">Sarah Johnson</p>
+                        <p id="sidebar-user-role" class="text-sm text-gray-500">Guru Matematika</p>
                     </div>
                 </div>
                 
@@ -546,6 +611,22 @@
             return callApi('login', { username, password });
         }
         
+        async function createUser(userData) {
+            return callApi('createUser', userData);
+        }
+        
+        async function updateUser(id, userData) {
+            return callApi('updateUser', { id, ...userData });
+        }
+        
+        async function deleteUser(id) {
+            return callApi('deleteUser', { id });
+        }
+        
+        async function getUsers(role) {
+            return callApi('getUsers', role ? { role } : {});
+        }
+        
         // === Kelas (Class) API ===
         async function getKelas(id) {
             return callApi('getKelas', id ? { id } : {});
@@ -702,19 +783,113 @@
             return callApi('deleteBankSoal', { id });
         }
         
-        // Example: Load data when page loads
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // You can uncomment these when you've deployed your Google Apps Script backend
-                // const kelasData = await getKelas();
-                // const siswaData = await getSiswa();
-                // console.log("Data loaded:", { kelas: kelasData, siswa: siswaData });
-                
-                // For now just log a message
-                console.log("API integration ready. Deploy your Google Apps Script backend to enable data fetching.");
-            } catch (error) {
-                console.error("Error loading initial data:", error);
+        // Auth management
+        function checkAuth() {
+            const user = getLoggedInUser();
+            if (!user) {
+                showLoginForm();
+            } else {
+                hideLoginForm();
+                updateUserInfo(user);
             }
+        }
+        
+        function getLoggedInUser() {
+            const userData = localStorage.getItem('eduadmin_user');
+            if (!userData) return null;
+            try {
+                return JSON.parse(userData);
+            } catch (error) {
+                console.error('Failed to parse user data:', error);
+                return null;
+            }
+        }
+        
+        function setLoggedInUser(user) {
+            localStorage.setItem('eduadmin_user', JSON.stringify(user));
+        }
+        
+        function clearLoggedInUser() {
+            localStorage.removeItem('eduadmin_user');
+        }
+        
+        function showLoginForm() {
+            document.getElementById('login-overlay').classList.remove('hidden');
+        }
+        
+        function hideLoginForm() {
+            document.getElementById('login-overlay').classList.add('hidden');
+        }
+        
+        function updateUserInfo(user) {
+            // Update sidebar user info
+            document.getElementById('sidebar-user-name').textContent = user.name;
+            document.getElementById('sidebar-user-role').textContent = user.role === 'admin' ? 'Administrator' : 'Guru';
+            
+            // Update avatar in header too
+            const headerUserImg = document.querySelector('#user-menu-button .shadcn-avatar img');
+            if (headerUserImg) {
+                headerUserImg.alt = user.name;
+            }
+        }
+        
+        function showLoginError(message) {
+            const errorEl = document.getElementById('login-error');
+            const errorMessageEl = document.getElementById('login-error-message');
+            errorMessageEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+        
+        function hideLoginError() {
+            document.getElementById('login-error').classList.add('hidden');
+        }
+        
+        // Add logout handler to the sign out button
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check auth status
+            checkAuth();
+            
+            // Handle login form submission
+            document.getElementById('login-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideLoginError();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                try {
+                    const response = await login(username, password);
+                    
+                    if (response.success) {
+                        setLoggedInUser(response.user);
+                        hideLoginForm();
+                        updateUserInfo(response.user);
+                    } else {
+                        showLoginError(response.error || 'Failed to login');
+                    }
+                } catch (error) {
+                    showLoginError('An error occurred. Please try again.');
+                    console.error('Login error:', error);
+                }
+            });
+            
+            // Find sign out button and attach handler
+            const signOutLinks = document.querySelectorAll('a.shadcn-dropdown-item.destructive');
+            signOutLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    clearLoggedInUser();
+                    showLoginForm();
+                });
+            });
+            
+            // You can uncomment these when you've deployed your Google Apps Script backend
+            // const kelasData = await getKelas();
+            // const siswaData = await getSiswa();
+            // console.log("Data loaded:", { kelas: kelasData, siswa: siswaData });
+            
+            // For now just log a message
+            console.log("API integration ready. Deploy your Google Apps Script backend to enable data fetching.");
         });
     </script>
 </body>
