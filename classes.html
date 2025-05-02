@@ -37,6 +37,36 @@
             overflow-y: auto;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Loading animation styles */
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: button-loading-spinner 0.6s linear infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+            to {
+                transform: rotate(1turn);
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -218,78 +248,67 @@
             try {
                 showLoading('classes-table-body');
                 
-                // Check for cached data first
-                const cachedClasses = localStorage.getItem('admin_classes');
-                const classesCache = cachedClasses ? JSON.parse(cachedClasses) : null;
-                const cacheTimestamp = localStorage.getItem('admin_classes_timestamp');
-                const cacheAge = cacheTimestamp ? (Date.now() - parseInt(cacheTimestamp)) : Infinity;
-                const cacheValid = cacheAge < 3600000; // 1 hour cache validity
+                // Clear the cache to force fresh data
+                clearDataCache();
+                
+                // Change API_URL to direct variable if not defined
+                if (typeof API_URL === 'undefined') {
+                    window.API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
+                }
+                
+                console.log("Loading classes from API_URL:", API_URL);
                 
                 // Load both classes and students in parallel for better performance
                 const [classesResult, studentsResult] = await Promise.all([
-                    // Classes data - use cache if valid, otherwise fetch
+                    // Classes data - always fetch fresh
                     (async () => {
-                        if (classesCache && cacheValid) {
-                            console.log('Using cached classes data');
-                            return { success: true, data: classesCache };
-                        }
-                        
                         try {
-                            const response = await getKelas();
-                            console.log('Classes API response:', response);
+                            console.log('Trying direct API call for classes...');
+                            const formData = new URLSearchParams();
+                            formData.append('action', 'getKelas');
+                            
+                            const response = await fetch(API_URL, {
+                                method: 'POST',
+                                body: formData
+                            }).then(res => res.json());
+                            
+                            console.log('Classes direct API response:', response);
                             
                             if (response && response.success) {
-                                // Cache valid response
                                 localStorage.setItem('admin_classes', JSON.stringify(response.data));
                                 localStorage.setItem('admin_classes_timestamp', Date.now().toString());
                                 return response;
                             }
-                            throw new Error('Failed to load classes');
+                            
+                            throw new Error('Failed to load classes with direct method');
                         } catch (error) {
-                            console.warn('Error in getKelas, trying fallback:', error);
+                            console.error('Error loading classes:', error);
                             
-                            // Attempt direct API call as fallback
-                            console.log('Trying fallback method for loading classes...');
-                            const fallbackResponse = await fetch(`${API_URL}?action=getKelas`, {
-                                method: 'GET'
-                            }).then(res => {
-                                if (!res.ok) throw new Error('Network response was not ok');
-                                return res.json();
-                            }).catch(err => {
-                                console.error('Fallback API Error:', err);
-                                return { success: false, error: err.message };
-                            });
-                            
-                            if (fallbackResponse && fallbackResponse.success) {
-                                localStorage.setItem('admin_classes', JSON.stringify(fallbackResponse.data));
-                                localStorage.setItem('admin_classes_timestamp', Date.now().toString());
+                            // Try fetching cached data as last resort
+                            const cachedClasses = localStorage.getItem('admin_classes');
+                            if (cachedClasses) {
+                                console.log('Using cached classes as fallback');
+                                return { success: true, data: JSON.parse(cachedClasses) };
                             }
-                            return fallbackResponse;
+                            
+                            return { success: false, error: error.message };
                         }
                     })(),
                     
                     // Students data for counting class sizes
                     (async () => {
                         try {
-                            const response = await getSiswa();
-                            console.log('Students API response:', response);
-                            return response;
-                        } catch (error) {
-                            console.warn('Error in getSiswa, trying fallback:', error);
+                            console.log('Loading students for class counts...');
+                            const formData = new URLSearchParams();
+                            formData.append('action', 'getSiswa');
                             
-                            // Try fallback method
-                            try {
-                                const formData = new URLSearchParams();
-                                formData.append('action', 'getSiswa');
-                                
-                                return fetch(API_URL, {
-                                    method: 'POST',
-                                    body: formData
-                                }).then(res => res.json());
-                            } catch (fallbackError) {
-                                console.error('All student loading methods failed:', fallbackError);
-                                return { success: false, error: fallbackError.message };
-                            }
+                            return fetch(API_URL, {
+                                method: 'POST',
+                                body: formData
+                            }).then(res => res.json());
+                        } catch (error) {
+                            console.error('Error loading students:', error);
+                            return { success: false, error: error.message };
                         }
                     })()
                 ]);
@@ -297,6 +316,7 @@
                 // Process results
                 if (classesResult && classesResult.success) {
                     classes = classesResult.data || [];
+                    console.log('Loaded classes data:', classes);
                     
                     // Calculate student counts if student data is available
                     if (studentsResult && studentsResult.success) {
@@ -310,6 +330,7 @@
                                 studentCounts[student.kelas] = (studentCounts[student.kelas] || 0) + 1;
                             }
                         });
+                        console.log('Student counts by class:', studentCounts);
                     }
                     
                     renderClassesTable(classes);
@@ -383,11 +404,13 @@
             let html = '';
             data.forEach(kelas => {
                 // Handle different possible property names
-                const id = kelas.id || kelas.kelas_id;
+                const id = kelas.id || kelas.kelas_id || '';
                 const nama = kelas.nama || kelas.nama_kelas || '-';
                 const tahunAjaran = kelas.tahunAjaran || kelas.tahun_ajaran || '-';
                 const waliKelas = kelas.waliKelas || kelas.wali_kelas || '-';
                 const deskripsi = kelas.deskripsi || kelas.desc || '';
+                
+                console.log(`Rendering class: ${nama}, ID: ${id}, Year: ${tahunAjaran}`);
                 
                 html += `
                 <tr>
@@ -482,121 +505,181 @@
             deleteClassId = null;
         }
         
+        // Helper function to set loading state on buttons
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
+            }
+        }
+        
         // Handle form submission
         async function handleSubmit(e) {
             e.preventDefault();
             
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
+            
             const id = document.getElementById('class-id').value;
             const isEdit = !!id;
             
-            // Standardize property names to match what the backend expects
-            const kelasData = {
-                nama: document.getElementById('nama').value,
-                tahun_ajaran: document.getElementById('tahun-ajaran').value,
-                wali_kelas: document.getElementById('wali-kelas').value,
-                deskripsi: document.getElementById('deskripsi').value
-            };
-            
-            // For compatibility, also include camelCase versions
-            kelasData.nama_kelas = kelasData.nama;
-            kelasData.tahunAjaran = kelasData.tahun_ajaran;
-            kelasData.waliKelas = kelasData.wali_kelas;
-            kelasData.desc = kelasData.deskripsi;
-            
             try {
-                let response;
+                // Important: Make sure to match field names with the form elements
+                const kelasData = {
+                    nama: document.getElementById('nama').value,
+                    tahun_ajaran: document.getElementById('tahun-ajaran').value,
+                    wali_kelas: document.getElementById('wali-kelas').value,
+                    deskripsi: document.getElementById('deskripsi').value
+                };
                 
+                // Add alternate field names for compatibility
+                kelasData.nama_kelas = kelasData.nama;
+                kelasData.tahunAjaran = kelasData.tahun_ajaran;
+                kelasData.waliKelas = kelasData.wali_kelas;
+                kelasData.desc = kelasData.deskripsi;
+                
+                // For edit operations, include both ID field formats
                 if (isEdit) {
-                    // Update existing class
-                    response = await updateKelas(id, kelasData);
-                } else {
-                    // Add new class
-                    response = await createKelas(kelasData);
+                    kelasData.id = id;
+                    kelasData.kelas_id = id;
+                }
+                
+                console.log(`${isEdit ? 'Updating' : 'Creating'} class with data:`, kelasData);
+                
+                let response;
+                try {
+                    if (isEdit) {
+                        response = await updateKelas(id, kelasData);
+                    } else {
+                        response = await createKelas(kelasData);
+                    }
+                } catch (functionError) {
+                    console.warn('API function error:', functionError);
+                    
+                    // Fall back to direct API call
+                    const formData = new URLSearchParams();
+                    formData.append('action', isEdit ? 'updateKelas' : 'createKelas');
+                    if (isEdit) {
+                        formData.append('id', id);
+                        formData.append('kelas_id', id);
+                    }
+                    
+                    for (const key in kelasData) {
+                        formData.append(key, kelasData[key]);
+                    }
+                    
+                    console.log('Sending form data:', Object.fromEntries(formData));
+                    
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    }).then(res => res.json());
+                    
+                    console.log('API response:', response);
                 }
                 
                 if (response && response.success) {
                     hideModal();
-                    loadClasses();
+                    
+                    // If response has data, add it to the classes array immediately
+                    if (response.data) {
+                        if (isEdit) {
+                            // Update the class in the array
+                            const index = classes.findIndex(c => 
+                                c.id === id || c.kelas_id === id
+                            );
+                            
+                            if (index !== -1) {
+                                classes[index] = {
+                                    ...classes[index],
+                                    ...response.data,
+                                    id: response.data.id || response.data.kelas_id || id,
+                                    kelas_id: response.data.id || response.data.kelas_id || id
+                                };
+                            }
+                        } else {
+                            // Add new class to the array
+                            classes.push({
+                                ...response.data,
+                                id: response.data.id || response.data.kelas_id,
+                                kelas_id: response.data.id || response.data.kelas_id
+                            });
+                        }
+                        
+                        // Update the table immediately
+                        renderClassesTable(classes);
+                    } else {
+                        // If no data in response, reload all classes
+                        await loadClasses();
+                    }
+                    
+                    alert(`Kelas berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
                     alert(`Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} kelas: ${errorMsg}`);
-                    
-                    // If standard methods fail, try the fallback direct API call
-                    if (!response || !response.success) {
-                        console.log('Trying fallback method for saving class...');
-                        const fallbackData = new URLSearchParams();
-                        fallbackData.append('action', isEdit ? 'updateKelas' : 'createKelas');
-                        if (isEdit) fallbackData.append('id', id);
-                        
-                        // Add all data properties
-                        for (const key in kelasData) {
-                            fallbackData.append(key, kelasData[key]);
-                        }
-                        
-                        const fallbackResponse = await fetch(API_URL, {
-                            method: 'POST',
-                            body: fallbackData,
-                            mode: 'cors'
-                        }).then(res => res.json()).catch(err => {
-                            console.error('Fallback API Error:', err);
-                            return { success: false, error: err.message };
-                        });
-                        
-                        if (fallbackResponse && fallbackResponse.success) {
-                            hideModal();
-                            loadClasses();
-                        } else {
-                            alert(`Fallback method juga gagal ${isEdit ? 'memperbarui' : 'menambahkan'} kelas. Silakan coba lagi nanti.`);
-                        }
-                    }
                 }
             } catch (error) {
                 console.error('Error saving class:', error);
                 alert(`Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} kelas. Periksa konsol untuk detail.`);
+            } finally {
+                setButtonLoading(submitButton, false);
             }
         }
         
         // Delete class
         async function deleteClass() {
-            if (!deleteClassId) return;
+            const confirmButton = document.getElementById('confirm-delete-btn');
+            setButtonLoading(confirmButton, true);
+            
+            const id = window.deleteClassId;
+            if (!id) {
+                alert('ID kelas tidak valid.');
+                setButtonLoading(confirmButton, false);
+                return;
+            }
             
             try {
-                const response = await deleteKelas(deleteClassId);
+                let response;
+                try {
+                    response = await deleteKelas(id);
+                } catch (functionError) {
+                    console.warn('API function error:', functionError);
+                    
+                    // Fall back to direct API call
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'deleteKelas');
+                    formData.append('id', id);
+                    formData.append('kelas_id', id);
+                    
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    }).then(res => res.json());
+                }
                 
                 if (response && response.success) {
                     hideDeleteModal();
-                    loadClasses();
+                    window.deleteClassId = null;
+                    await loadClasses();
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
                     alert(`Gagal menghapus kelas: ${errorMsg}`);
-                    
-                    // If standard method fails, try the fallback direct API call
-                    if (!response || !response.success) {
-                        console.log('Trying fallback method for deleting class...');
-                        const fallbackData = new URLSearchParams();
-                        fallbackData.append('action', 'deleteKelas');
-                        fallbackData.append('id', deleteClassId);
-                        
-                        const fallbackResponse = await fetch(API_URL, {
-                            method: 'POST',
-                            body: fallbackData,
-                            mode: 'cors'
-                        }).then(res => res.json()).catch(err => {
-                            console.error('Fallback API Error:', err);
-                            return { success: false, error: err.message };
-                        });
-                        
-                        if (fallbackResponse && fallbackResponse.success) {
-                            hideDeleteModal();
-                            loadClasses();
-                        } else {
-                            alert('Fallback method juga gagal menghapus kelas. Silakan coba lagi nanti.');
-                        }
-                    }
                 }
             } catch (error) {
                 console.error('Error deleting class:', error);
-                alert('Terjadi kesalahan saat menghapus kelas. Periksa konsol untuk detail.');
+                alert('Terjadi kesalahan saat menghapus kelas: ' + error.message);
+            } finally {
+                setButtonLoading(confirmButton, false);
             }
         }
     </script>

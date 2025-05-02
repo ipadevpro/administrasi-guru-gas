@@ -40,6 +40,36 @@
             overflow-y: auto;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Loading animation styles */
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: button-loading-spinner 0.6s linear infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+            to {
+                transform: rotate(1turn);
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -269,129 +299,112 @@
             try {
                 showLoading('students-table-body');
                 
-                // Check for cached data first
-                const cachedClasses = localStorage.getItem('admin_classes');
-                const classesCache = cachedClasses ? JSON.parse(cachedClasses) : null;
-                const cacheTimestamp = localStorage.getItem('admin_classes_timestamp');
-                const cacheAge = cacheTimestamp ? (Date.now() - parseInt(cacheTimestamp)) : Infinity;
-                const cacheValid = cacheAge < 3600000; // 1 hour cache validity
+                // Clear any existing filter selections
+                document.getElementById('filter-class').value = "";
+                document.getElementById('search-input').value = "";
+                
+                // Force clear cache to get fresh data
+                localStorage.removeItem('admin_classes');
+                localStorage.setItem('admin_classes_timestamp', '0');
+                
+                // Change API_URL to direct variable if not defined
+                if (typeof API_URL === 'undefined') {
+                    window.API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
+                }
+                
+                console.log('Loading data from API_URL:', API_URL);
                 
                 // Load both classes and students in parallel
                 const [classesResult, studentsResult] = await Promise.all([
-                    // Classes data - use cache if valid, otherwise fetch
-                    (async () => {
-                        if (classesCache && cacheValid) {
-                            console.log('Using cached classes data');
-                            return { success: true, data: classesCache };
-                        }
-                        
-                        try {
-                            // First try using the getKelas function from api.js
-                            const response = await getKelas();
-                            console.log('Classes API response:', response);
-                            
-                            if (response && response.success) {
-                                // Cache valid response
-                                localStorage.setItem('admin_classes', JSON.stringify(response.data));
-                                localStorage.setItem('admin_classes_timestamp', Date.now().toString());
-                                return response;
-                            }
-                            throw new Error('Failed to load classes');
-                        } catch (error) {
-                            console.warn('Error in getKelas, trying fallback:', error);
-                            
-                            // Try multiple fallback methods
-                            try {
-                                console.log('Trying fallback method for loading classes...');
-                                const fallbackResponse = await fetch(`${API_URL}?action=getKelas`, {
-                                    method: 'GET'
-                                }).then(res => {
-                                    if (!res.ok) throw new Error('Network response was not ok');
-                                    return res.json();
-                                });
-                                
-                                if (fallbackResponse && fallbackResponse.success) {
-                                    localStorage.setItem('admin_classes', JSON.stringify(fallbackResponse.data));
-                                    localStorage.setItem('admin_classes_timestamp', Date.now().toString());
-                                    return fallbackResponse;
-                                }
-                                
-                                // Try POST as last resort
-                                console.log('Trying POST method for loading classes...');
-                                const formData = new URLSearchParams();
-                                formData.append('action', 'getKelas');
-                                
-                                const postResponse = await fetch(API_URL, {
-                                    method: 'POST',
-                                    body: formData
-                                }).then(res => res.json());
-                                
-                                if (postResponse && postResponse.success) {
-                                    localStorage.setItem('admin_classes', JSON.stringify(postResponse.data));
-                                    localStorage.setItem('admin_classes_timestamp', Date.now().toString());
-                                }
-                                return postResponse;
-                            } catch (fallbackError) {
-                                console.error('All class loading methods failed:', fallbackError);
-                                return { success: false, error: fallbackError.message };
-                            }
-                        }
-                    })(),
-                    
-                    // Students data
+                    // Classes data - direct API call
                     (async () => {
                         try {
-                            // First try GET method
-                            console.log('Trying GET method for loading students...');
-                            const response = await fetch(`${API_URL}?action=getSiswa`, {
-                                method: 'GET'
-                            }).then(res => {
-                                if (!res.ok) throw new Error('Network response was not ok');
-                                return res.json();
-                            });
-                            
-                            console.log('Students API response (GET):', response);
-                            if (response && response.success) return response;
-                            throw new Error('Failed to load students with GET method');
-                        } catch (error) {
-                            console.warn('Error in GET method, trying POST fallback:', error);
-                            
-                            // Try POST method with URLSearchParams
-                            console.log('Trying POST method for loading students...');
+                            console.log('Loading classes via direct API call');
                             const formData = new URLSearchParams();
-                            formData.append('action', 'getSiswa');
+                            formData.append('action', 'getKelas');
                             
-                            return fetch(API_URL, {
+                            const response = await fetch(API_URL, {
                                 method: 'POST',
                                 body: formData
                             }).then(res => res.json());
+                            
+                            console.log('Classes API response:', response);
+                            return response;
+                        } catch (error) {
+                            console.error('Error loading classes:', error);
+                            return { success: false, error: error.message };
+                        }
+                    })(),
+                    
+                    // Students data - direct API call
+                    (async () => {
+                        try {
+                            console.log('Loading students via direct API call');
+                            const formData = new URLSearchParams();
+                            formData.append('action', 'getSiswa');
+                            
+                            const response = await fetch(API_URL, {
+                                method: 'POST',
+                                body: formData
+                            }).then(res => res.json());
+                            
+                            console.log('Students API response:', response);
+                            return response;
+                        } catch (error) {
+                            console.error('Error loading students:', error);
+                            return { success: false, error: error.message };
                         }
                     })()
                 ]);
                 
-                // Process results
+                // Process classes results
                 if (classesResult && classesResult.success) {
                     classes = classesResult.data || [];
+                    console.log('Loaded classes:', classes);
                     populateClassDropdowns();
                 } else {
                     console.error('Failed to load classes with all methods');
                 }
                 
+                // Process students results
                 if (studentsResult && studentsResult.success) {
-                    students = studentsResult.data || [];
-                    // Ensure all student objects have proper id and siswa_id properties
-                    students = students.map(student => {
-                        // Normalize the ID properties
-                        const id = student.id || student.siswa_id || '';
-                        // Generate a random ID if none exists
-                        const safeId = id || ('generated-' + Math.random().toString(36).substring(2, 9));
-                        return {
-                            ...student,
-                            id: String(safeId),
-                            siswa_id: String(safeId)
-                        };
-                    });
+                    // Log the raw data first to check the structure
+                    console.log('Raw student data from API:', studentsResult.data);
+                    
+                    // Clear existing data
+                    students = [];
+                    
+                    if (Array.isArray(studentsResult.data)) {
+                        students = studentsResult.data.map(student => {
+                            // Normalize the ID properties
+                            const id = student.id || student.siswa_id || '';
+                            // Generate a random ID if none exists
+                            const safeId = id || ('generated-' + Math.random().toString(36).substring(2, 9));
+                            
+                            // Ensure kelas and kelas_id are properly extracted
+                            const kelasId = student.kelas || student.kelas_id || '';
+                            
+                            return {
+                                ...student,
+                                id: String(safeId),
+                                siswa_id: String(safeId),
+                                kelas: kelasId,
+                                kelas_id: kelasId
+                            };
+                        });
+                    }
+                    
                     console.log('Normalized student data:', students);
+                    console.log('Total students loaded:', students.length);
+                    
+                    // Check for students by class (for debugging)
+                    const studentsByClass = {};
+                    students.forEach(student => {
+                        const kelasId = student.kelas || student.kelas_id || 'unknown';
+                        studentsByClass[kelasId] = (studentsByClass[kelasId] || 0) + 1;
+                    });
+                    console.log('Students distribution by class:', studentsByClass);
+                    
                     renderStudentsTable(students);
                 } else {
                     showError('students-table-body', 'Gagal memuat data siswa dengan semua metode. Silakan refresh halaman.');
@@ -470,29 +483,26 @@
                 return;
             }
             
-            console.log('Rendering students:', data);
+            console.log('Rendering students table with', data.length, 'students');
             
             let html = '';
             data.forEach(siswa => {
                 // Handle different property naming conventions
-                const id = siswa.id || siswa.siswa_id;
+                const id = siswa.id || siswa.siswa_id || '';
                 const nama = siswa.nama || siswa.nama_siswa || '-';
                 const nis = siswa.nis || siswa.nomor_induk || '-';
-                const kelasId = siswa.kelas || siswa.kelas_id;
+                const kelasId = siswa.kelas || siswa.kelas_id || '';
                 const jenisKelamin = siswa.jenisKelamin || siswa.jenis_kelamin || '-';
                 const tanggalLahir = siswa.tanggalLahir || siswa.tanggal_lahir || '';
                 
-                // Print the full student object for debugging
-                console.log('Student data structure:', JSON.stringify(siswa));
-                
                 // Find class name from class ID
                 const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
-                const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas) : '-';
+                const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '-') : '-';
                 
-                console.log(`Rendering student row with ID: ${id}, type: ${typeof id}`);
+                console.log(`Rendering student: ${nama}, Class ID: ${kelasId}, Class Name: ${kelasNama}`);
                 
                 // Ensure ID is not undefined or empty
-                const safeId = id ? id : 'no-id-' + Math.random().toString(36).substring(2, 9);
+                const safeId = id || 'no-id-' + Math.random().toString(36).substring(2, 9);
                 
                 html += `
                 <tr data-student-id="${safeId}">
@@ -546,22 +556,34 @@
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
             const classFilter = document.getElementById('filter-class').value;
             
-            let filteredStudents = students;
+            console.log('Applying filters - search:', searchTerm, 'class:', classFilter);
+            console.log('Total students before filtering:', students.length);
+            
+            let filteredStudents = [...students];
             
             // Apply class filter
             if (classFilter) {
+                console.log('Filtering by class ID:', classFilter);
                 filteredStudents = filteredStudents.filter(student => {
-                    const studentKelasId = student.kelas || student.kelas_id;
-                    return studentKelasId === classFilter;
+                    const studentKelasId = student.kelas || student.kelas_id || '';
+                    const result = studentKelasId === classFilter;
+                    if (!result) {
+                        console.log('Student filtered out due to class mismatch:', student.nama, 
+                                    'student class:', studentKelasId, 
+                                    'filter class:', classFilter);
+                    }
+                    return result;
                 });
+                console.log('Students after class filter:', filteredStudents.length);
             }
             
             // Apply search term
             if (searchTerm) {
+                console.log('Filtering by search term:', searchTerm);
                 filteredStudents = filteredStudents.filter(student => {
                     const nama = (student.nama || student.nama_siswa || '').toLowerCase();
                     const nis = (student.nis || student.nomor_induk || '').toLowerCase();
-                    const kelasId = student.kelas || student.kelas_id;
+                    const kelasId = student.kelas || student.kelas_id || '';
                     
                     // Get class name
                     const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
@@ -571,6 +593,7 @@
                            nis.includes(searchTerm) || 
                            kelasNama.includes(searchTerm);
                 });
+                console.log('Students after search filter:', filteredStudents.length);
             }
             
             renderStudentsTable(filteredStudents);
@@ -692,9 +715,30 @@
             // Don't clear deleteStudentId here
         }
         
+        // Helper function to set loading state on buttons
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
+            }
+        }
+
         // Handle form submission
         async function handleSubmit(e) {
             e.preventDefault();
+            
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
             
             const id = document.getElementById('student-id').value;
             const isEdit = !!id;
@@ -735,17 +779,19 @@
                 siswaData.siswa_id = id;
             }
             
+            console.log('Submitting student data:', siswaData);
+            
             try {
-                // First try standard API functions if available (like in classes.html)
                 let response;
                 try {
+                    // Try using the API functions from student-api.js
+                    console.log('Using API functions from student-api.js');
                     if (isEdit) {
-                        // Update existing student
                         response = await updateSiswa(id, siswaData);
                     } else {
-                        // Add new student
                         response = await createSiswa(siswaData);
                     }
+                    console.log('API response:', response);
                 } catch (functionError) {
                     console.warn('API function error:', functionError);
                     
@@ -753,26 +799,101 @@
                     console.log('Trying direct API call for saving student...');
                     const formData = new URLSearchParams();
                     formData.append('action', isEdit ? 'updateSiswa' : 'createSiswa');
-                    if (isEdit) formData.append('id', id);
+                    if (isEdit) {
+                        formData.append('id', id);
+                        formData.append('siswa_id', id);
+                    }
                     
                     // Add all data properties
                     for (const key in siswaData) {
                         formData.append(key, siswaData[key]);
                     }
                     
+                    console.log('FormData:', Object.fromEntries(formData));
+                    
                     response = await fetch(API_URL, {
                         method: 'POST',
                         body: formData
-                    }).then(res => res.json()).catch(err => {
-                        console.error('API Error:', err);
-                        return { success: false, error: err.message };
-                    });
+                    }).then(res => res.json());
+                    
+                    console.log('Direct API response:', response);
                 }
                 
                 if (response && response.success) {
+                    let newStudentData;
+                    
+                    // Handle response data
+                    if (response.data) {
+                        newStudentData = response.data;
+                        console.log('Received student data from response:', newStudentData);
+                    } else {
+                        // If no response data, construct from form input
+                        newStudentData = { ...siswaData };
+                        if (!isEdit) {
+                            // Generate a temporary ID if none provided
+                            newStudentData.id = 'temp-' + Date.now();
+                            newStudentData.siswa_id = newStudentData.id;
+                        }
+                        console.log('Constructed student data from form:', newStudentData);
+                    }
+                    
+                    // Ensure student has kelas references for filtering
+                    const kelasId = newStudentData.kelas || newStudentData.kelas_id || siswaData.kelas;
+                    newStudentData.kelas = kelasId;
+                    newStudentData.kelas_id = kelasId;
+                    
+                    if (isEdit) {
+                        // Update existing student in the array
+                        const index = students.findIndex(s => 
+                            String(s.id) === String(id) || 
+                            String(s.siswa_id) === String(id)
+                        );
+                        
+                        if (index !== -1) {
+                            students[index] = {
+                                ...students[index],
+                                ...newStudentData,
+                                id: String(newStudentData.id || newStudentData.siswa_id || id),
+                                siswa_id: String(newStudentData.id || newStudentData.siswa_id || id)
+                            };
+                            console.log('Updated student in array at index', index, students[index]);
+                        } else {
+                            console.warn('Could not find student to update, adding as new');
+                            // Add as new if not found
+                            students.push({
+                                ...newStudentData,
+                                id: String(newStudentData.id || newStudentData.siswa_id || id),
+                                siswa_id: String(newStudentData.id || newStudentData.siswa_id || id)
+                            });
+                        }
+                    } else {
+                        // Add new student to the array
+                        const newStudent = {
+                            ...newStudentData,
+                            id: String(newStudentData.id || newStudentData.siswa_id || 'new-' + Date.now()),
+                            siswa_id: String(newStudentData.id || newStudentData.siswa_id || 'new-' + Date.now())
+                        };
+                        students.push(newStudent);
+                        console.log('Added new student to array:', newStudent);
+                    }
+                    
                     hideModal();
-                    await loadData();
-                    applyFilters(); // Re-apply any active filters
+                    
+                    // Clear any filters that might hide the new student
+                    document.getElementById('search-input').value = '';
+                    document.getElementById('filter-class').value = '';
+                    
+                    console.log('Current students array:', students);
+                    
+                    // Directly update the table to show the change immediately
+                    renderStudentsTable(students);
+                    
+                    alert(`Siswa berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
+                    
+                    // Optional: Reload data from server to ensure everything is in sync
+                    setTimeout(() => {
+                        loadData();
+                    }, 500);
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
                     alert(`Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} siswa: ${errorMsg}`);
@@ -780,38 +901,31 @@
             } catch (error) {
                 console.error('Error saving student:', error);
                 alert(`Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} siswa. Periksa konsol untuk detail.`);
+            } finally {
+                setButtonLoading(submitButton, false);
             }
         }
         
         // Delete student
         async function deleteStudent() {
+            const confirmButton = document.getElementById('confirm-delete-btn');
+            setButtonLoading(confirmButton, true);
+            
             // Use the global variable
             const studentIdToDelete = window.deleteStudentId;
             console.log('Deleting student with ID (from global var):', studentIdToDelete);
             
             if (!studentIdToDelete || studentIdToDelete === 'undefined') {
-                console.error('Invalid student ID to delete:', studentIdToDelete);
                 alert('Error: Invalid student ID to delete');
+                setButtonLoading(confirmButton, false);
                 return;
             }
             
-            // Find the student in the array to confirm it exists
-            const studentToDelete = students.find(s => 
-                String(s.id) === String(studentIdToDelete) || 
-                String(s.siswa_id) === String(studentIdToDelete)
-            );
-            
-            if (!studentToDelete) {
-                console.error('Student not found in local data with ID:', studentIdToDelete);
-                // Continue anyway as the backend might have the record
-            } else {
-                console.log('Found student to delete:', studentToDelete);
-            }
-            
             try {
-                // First try standard API function
                 let response;
                 try {
+                    // Try using the API function from student-api.js
+                    console.log('Using deleteSiswa function from student-api.js');
                     response = await deleteSiswa(studentIdToDelete);
                     console.log('deleteSiswa API response:', response);
                 } catch (functionError) {
@@ -827,26 +941,35 @@
                     response = await fetch(API_URL, {
                         method: 'POST',
                         body: formData
-                    }).then(res => res.json()).catch(err => {
-                        console.error('API Error:', err);
-                        return { success: false, error: err.message };
-                    });
+                    }).then(res => res.json());
                     console.log('Direct API response:', response);
                 }
                 
                 if (response && response.success) {
+                    // Remove the student from the local array
+                    students = students.filter(s => 
+                        String(s.id) !== String(studentIdToDelete) && 
+                        String(s.siswa_id) !== String(studentIdToDelete)
+                    );
+                    
+                    // Update the table with the modified array
+                    renderStudentsTable(students);
                     hideDeleteModal();
+                    
                     // Clear the ID after successful deletion
                     window.deleteStudentId = null;
-                    await loadData();
                     applyFilters(); // Re-apply any active filters
+                    
+                    alert('Siswa berhasil dihapus.');
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
                     alert(`Gagal menghapus siswa: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error deleting student:', error);
-                alert('Terjadi kesalahan saat menghapus siswa. Periksa konsol untuk detail.');
+                alert('Terjadi kesalahan saat menghapus siswa: ' + error.message);
+            } finally {
+                setButtonLoading(confirmButton, false);
             }
         }
         

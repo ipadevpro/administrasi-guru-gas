@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Load SheetJS library for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Load required API and layout scripts -->
     <script src="js/api.js"></script>
     <script src="js/layout.js"></script>
@@ -40,6 +42,36 @@
             overflow-y: auto;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Loading animation styles */
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: button-loading-spinner 0.6s linear infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+            to {
+                transform: rotate(1turn);
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -56,12 +88,26 @@
             <div class="flex-1 overflow-auto p-4">
                 <div class="mb-6 flex justify-between items-center">
                     <h2 class="text-2xl font-semibold">Nilai Siswa</h2>
-                    <button id="add-grade-btn" class="shadcn-btn shadcn-btn-primary flex items-center">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Tambah Nilai
-                    </button>
+                    <div class="flex space-x-2">
+                        <button id="export-excel-btn" class="shadcn-btn shadcn-btn-outline flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export Excel
+                        </button>
+                        <button id="print-report-btn" class="shadcn-btn shadcn-btn-outline flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            </svg>
+                            Cetak Laporan
+                        </button>
+                        <button id="add-grade-btn" class="shadcn-btn shadcn-btn-primary flex items-center">
+                            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Tambah Nilai
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Filter container -->
@@ -274,6 +320,10 @@
             document.getElementById('search-input').addEventListener('input', applyFilters);
             document.getElementById('filter-class').addEventListener('change', applyFilters);
             document.getElementById('filter-assignment').addEventListener('change', applyFilters);
+            
+            // Export and print functionality
+            document.getElementById('export-excel-btn').addEventListener('click', exportToExcel);
+            document.getElementById('print-report-btn').addEventListener('click', printReport);
         });
         
         // Global variables
@@ -879,9 +929,30 @@
             document.getElementById('delete-modal').classList.add('hidden');
         }
         
+        // Helper function to set loading state on buttons
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
+            }
+        }
+        
         // Handle form submission
         async function handleSubmit(e) {
             e.preventDefault();
+            
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
             
             const id = document.getElementById('grade-id').value;
             const isEdit = !!id;
@@ -955,22 +1026,27 @@
             } catch (error) {
                 console.error('Error saving grade:', error);
                 alert(`Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} nilai. Periksa konsol untuk detail.`);
+            } finally {
+                setButtonLoading(submitButton, false);
             }
         }
         
         // Delete grade
         async function deleteGrade() {
-            // Use the global variable
-            const gradeIdToDelete = window.deleteGradeId;
-            console.log('Deleting grade with ID (from global var):', gradeIdToDelete);
-            
-            if (!gradeIdToDelete || gradeIdToDelete === 'undefined') {
-                console.error('Invalid grade ID to delete:', gradeIdToDelete);
-                alert('Error: Invalid grade ID to delete');
-                return;
-            }
+            const confirmButton = document.getElementById('confirm-delete-btn');
+            setButtonLoading(confirmButton, true);
             
             try {
+                // Use the global variable
+                const gradeIdToDelete = window.deleteGradeId;
+                console.log('Deleting grade with ID (from global var):', gradeIdToDelete);
+                
+                if (!gradeIdToDelete || gradeIdToDelete === 'undefined') {
+                    console.error('Invalid grade ID to delete:', gradeIdToDelete);
+                    alert('Error: Invalid grade ID to delete');
+                    return;
+                }
+                
                 // First try standard API function
                 let response;
                 try {
@@ -1009,6 +1085,8 @@
             } catch (error) {
                 console.error('Error deleting grade:', error);
                 alert('Terjadi kesalahan saat menghapus nilai. Periksa konsol untuk detail.');
+            } finally {
+                setButtonLoading(confirmButton, false);
             }
         }
         
@@ -1051,6 +1129,446 @@
             localStorage.removeItem('admin_classes');
             localStorage.removeItem('admin_classes_timestamp');
             console.log('Data cache cleared');
+        }
+        
+        // Export to Excel function
+        function exportToExcel() {
+            // Get filtered grades to export
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const classFilter = document.getElementById('filter-class').value;
+            const assignmentFilter = document.getElementById('filter-assignment').value;
+            
+            // Apply filters to get the data to export
+            let dataToExport = [...grades];
+            
+            // Apply class filter
+            if (classFilter) {
+                dataToExport = dataToExport.filter(nilai => {
+                    const siswaId = nilai.siswa_id || '';
+                    const siswa = students.find(s => (s.id === siswaId || s.siswa_id === siswaId));
+                    
+                    if (!siswa) return false;
+                    
+                    const siswaKelasId = siswa.kelas_id || '';
+                    return siswaKelasId === classFilter;
+                });
+            }
+            
+            // Apply assignment filter
+            if (assignmentFilter) {
+                dataToExport = dataToExport.filter(nilai => {
+                    const tugasId = nilai.tugas_id || '';
+                    return tugasId === assignmentFilter;
+                });
+            }
+            
+            // Apply search term (search by student name)
+            if (searchTerm) {
+                dataToExport = dataToExport.filter(nilai => {
+                    const siswaId = nilai.siswa_id || '';
+                    const siswa = students.find(s => (s.id === siswaId || s.siswa_id === siswaId));
+                    
+                    if (!siswa) return false;
+                    
+                    const namaSiswa = (siswa.nama || '').toLowerCase();
+                    return namaSiswa.includes(searchTerm);
+                });
+            }
+            
+            // Sort data by student name
+            dataToExport.sort((a, b) => {
+                const siswaA = students.find(s => (s.id === a.siswa_id || s.siswa_id === a.siswa_id));
+                const siswaB = students.find(s => (s.id === b.siswa_id || s.siswa_id === b.siswa_id));
+                
+                const nameA = siswaA ? (siswaA.nama || '') : '';
+                const nameB = siswaB ? (siswaB.nama || '') : '';
+                
+                return nameA.localeCompare(nameB);
+            });
+            
+            // Prepare data for Excel export (array of objects)
+            const excelData = dataToExport.map(nilai => {
+                const siswaId = nilai.siswa_id || '';
+                const tugasId = nilai.tugas_id || '';
+                const nilaiAngka = nilai.nilai || 0;
+                const keterangan = nilai.keterangan || '';
+                const status = nilai.status || 'Belum Dikoreksi';
+                const tanggal = nilai.tanggal || nilai.created_at || new Date().toISOString();
+                
+                // Find student and assignment information
+                const siswa = students.find(s => (s.id === siswaId || s.siswa_id === siswaId));
+                const tugas = assignments.find(t => (t.id === tugasId || t.tugas_id === tugasId));
+                
+                const namaSiswa = siswa ? siswa.nama || 'Unknown' : 'Unknown';
+                const judulTugas = tugas ? tugas.judul || 'Unknown' : 'Unknown';
+                
+                // Find class info
+                let kelasNama = '-';
+                if (siswa) {
+                    const kelasId = siswa.kelas_id || '';
+                    const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
+                    kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '-') : '-';
+                }
+                
+                // Format date
+                const formattedDate = formatDate(tanggal);
+                
+                // Return a row for Excel
+                return {
+                    'Nama Siswa': namaSiswa,
+                    'Kelas': kelasNama,
+                    'Tugas': judulTugas,
+                    'Nilai': nilaiAngka,
+                    'Status': status,
+                    'Tanggal': formattedDate,
+                    'Keterangan': keterangan
+                };
+            });
+            
+            // Create worksheet from data
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // Add some styling (column widths)
+            const colWidths = [
+                { wch: 25 }, // Nama Siswa
+                { wch: 15 }, // Kelas
+                { wch: 25 }, // Tugas
+                { wch: 8 },  // Nilai
+                { wch: 18 }, // Status
+                { wch: 15 }, // Tanggal
+                { wch: 30 }, // Keterangan
+            ];
+            worksheet['!cols'] = colWidths;
+            
+            // Create workbook
+            const workbook = XLSX.utils.book_new();
+            
+            // Get report title based on filters
+            let sheetName = "Nilai Siswa";
+            if (classFilter) {
+                const kelasObj = classes.find(k => (k.id === classFilter || k.kelas_id === classFilter));
+                if (kelasObj) {
+                    sheetName = `Nilai ${kelasObj.nama || kelasObj.nama_kelas || 'Kelas'}`;
+                }
+            }
+            
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+            
+            // Generate Excel file
+            const now = new Date();
+            const filename = `nilai_siswa_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
+            
+            // Trigger download
+            XLSX.writeFile(workbook, filename);
+        }
+        
+        // Print report function
+        function printReport() {
+            // Get filtered grades to include in the report
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const classFilter = document.getElementById('filter-class').value;
+            const assignmentFilter = document.getElementById('filter-assignment').value;
+            
+            // Apply filters to get the data to print
+            let dataToPrint = [...grades];
+            
+            // Apply class filter
+            if (classFilter) {
+                dataToPrint = dataToPrint.filter(nilai => {
+                    const siswaId = nilai.siswa_id || '';
+                    const siswa = students.find(s => (s.id === siswaId || s.siswa_id === siswaId));
+                    
+                    if (!siswa) return false;
+                    
+                    const siswaKelasId = siswa.kelas_id || '';
+                    return siswaKelasId === classFilter;
+                });
+            }
+            
+            // Apply assignment filter
+            if (assignmentFilter) {
+                dataToPrint = dataToPrint.filter(nilai => {
+                    const tugasId = nilai.tugas_id || '';
+                    return tugasId === assignmentFilter;
+                });
+            }
+            
+            // Apply search term (search by student name)
+            if (searchTerm) {
+                dataToPrint = dataToPrint.filter(nilai => {
+                    const siswaId = nilai.siswa_id || '';
+                    const siswa = students.find(s => (s.id === siswaId || s.siswa_id === siswaId));
+                    
+                    if (!siswa) return false;
+                    
+                    const namaSiswa = (siswa.nama || '').toLowerCase();
+                    return namaSiswa.includes(searchTerm);
+                });
+            }
+            
+            // Get report title based on filters
+            let reportTitle = "Laporan Nilai Siswa";
+            let subTitle = "";
+            
+            if (classFilter) {
+                const kelasObj = classes.find(k => (k.id === classFilter || k.kelas_id === classFilter));
+                if (kelasObj) {
+                    subTitle += `Kelas: ${kelasObj.nama || kelasObj.nama_kelas || '-'}`;
+                }
+            }
+            
+            if (assignmentFilter) {
+                const tugasObj = assignments.find(t => (t.id === assignmentFilter || t.tugas_id === assignmentFilter));
+                if (tugasObj) {
+                    subTitle += subTitle ? ` - Tugas: ${tugasObj.judul || '-'}` : `Tugas: ${tugasObj.judul || '-'}`;
+                }
+            }
+            
+            // Calculate statistics
+            const totalGrades = dataToPrint.length;
+            let sum = 0;
+            let highest = 0;
+            let lowest = 100;
+            
+            // Only include numeric grades (skip non-submissions, etc.)
+            const validGrades = dataToPrint.filter(g => {
+                const nilai = parseFloat(g.nilai || 0);
+                return !isNaN(nilai) && (g.status !== 'Tidak Mengumpulkan');
+            });
+            
+            if (validGrades.length > 0) {
+                validGrades.forEach(grade => {
+                    const nilai = parseFloat(grade.nilai || 0);
+                    sum += nilai;
+                    
+                    if (nilai > highest) highest = nilai;
+                    if (nilai < lowest) lowest = nilai;
+                });
+                
+                const average = sum / validGrades.length;
+                
+                // Format statistics for the report
+                var averageGrade = average.toFixed(1);
+                var highestGrade = highest;
+                var lowestGrade = lowest;
+            } else {
+                var averageGrade = 0;
+                var highestGrade = 0;
+                var lowestGrade = 0;
+            }
+            
+            // Create a new window for the print report
+            const printWindow = window.open('', '', 'height=600,width=800');
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>${reportTitle}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                            color: #333;
+                        }
+                        h1, h2 {
+                            text-align: center;
+                            margin-bottom: 5px;
+                        }
+                        .subtitle {
+                            text-align: center;
+                            margin-bottom: 20px;
+                            font-style: italic;
+                            color: #666;
+                        }
+                        .date {
+                            text-align: right;
+                            margin-bottom: 20px;
+                        }
+                        .stats-container {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 20px;
+                        }
+                        .stat-box {
+                            border: 1px solid #ddd;
+                            padding: 10px;
+                            width: 23%;
+                            text-align: center;
+                        }
+                        .stat-label {
+                            font-size: 12px;
+                            color: #666;
+                            margin-bottom: 5px;
+                        }
+                        .stat-value {
+                            font-size: 20px;
+                            font-weight: bold;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+                        th, td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: left;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                            font-weight: bold;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+                        .signature {
+                            margin-top: 50px;
+                            text-align: right;
+                        }
+                        .signature-line {
+                            margin-top: 70px;
+                            border-top: 1px solid #000;
+                            width: 200px;
+                            display: inline-block;
+                        }
+                        @media print {
+                            @page { 
+                                size: landscape;
+                                margin: 1cm;
+                            }
+                            .no-print {
+                                display: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>${reportTitle}</h1>
+                    ${subTitle ? `<div class="subtitle">${subTitle}</div>` : ''}
+                    <div class="date">Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    
+                    <div class="stats-container">
+                        <div class="stat-box">
+                            <div class="stat-label">Jumlah Nilai</div>
+                            <div class="stat-value">${totalGrades}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Rata-rata Nilai</div>
+                            <div class="stat-value">${averageGrade}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Nilai Tertinggi</div>
+                            <div class="stat-value">${highestGrade}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Nilai Terendah</div>
+                            <div class="stat-value">${lowestGrade}</div>
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Siswa</th>
+                                <th>Kelas</th>
+                                <th>Tugas</th>
+                                <th>Nilai</th>
+                                <th>Status</th>
+                                <th>Tanggal</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `);
+            
+            if (dataToPrint.length === 0) {
+                printWindow.document.write(`
+                    <tr>
+                        <td colspan="8" style="text-align: center;">Tidak ada data nilai</td>
+                    </tr>
+                `);
+            } else {
+                // Sort data by student name
+                dataToPrint.sort((a, b) => {
+                    const siswaA = students.find(s => (s.id === a.siswa_id || s.siswa_id === a.siswa_id));
+                    const siswaB = students.find(s => (s.id === b.siswa_id || s.siswa_id === b.siswa_id));
+                    
+                    const nameA = siswaA ? (siswaA.nama || '') : '';
+                    const nameB = siswaB ? (siswaB.nama || '') : '';
+                    
+                    return nameA.localeCompare(nameB);
+                });
+                
+                dataToPrint.forEach((nilai, index) => {
+                    const siswaId = nilai.siswa_id || '';
+                    const tugasId = nilai.tugas_id || '';
+                    const nilaiAngka = nilai.nilai || 0;
+                    const keterangan = nilai.keterangan || '';
+                    const status = nilai.status || 'Belum Dikoreksi';
+                    const tanggal = nilai.tanggal || nilai.created_at || new Date().toISOString();
+                    
+                    // Find student and assignment information
+                    const siswa = students.find(s => (s.id === siswaId || s.siswa_id === siswaId));
+                    const tugas = assignments.find(t => (t.id === tugasId || t.tugas_id === tugasId));
+                    
+                    const namaSiswa = siswa ? siswa.nama || 'Unknown' : 'Unknown';
+                    const judulTugas = tugas ? tugas.judul || 'Unknown' : 'Unknown';
+                    
+                    // Find class info
+                    let kelasNama = '-';
+                    if (siswa) {
+                        const kelasId = siswa.kelas_id || '';
+                        const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
+                        kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '-') : '-';
+                    }
+                    
+                    // Format date
+                    const formattedDate = formatDate(tanggal);
+                    
+                    printWindow.document.write(`
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${namaSiswa}</td>
+                            <td>${kelasNama}</td>
+                            <td>${judulTugas}</td>
+                            <td style="text-align: center; font-weight: bold;">${nilaiAngka}</td>
+                            <td>${status}</td>
+                            <td>${formattedDate}</td>
+                            <td>${keterangan}</td>
+                        </tr>
+                    `);
+                });
+            }
+            
+            printWindow.document.write(`
+                        </tbody>
+                    </table>
+                    
+                    <div class="signature">
+                        <div>........................, ........................ ${new Date().getFullYear()}</div>
+                        <div class="signature-line"></div>
+                        <div>(.............................................)</div>
+                        <div>Guru Mata Pelajaran</div>
+                    </div>
+                    
+                    <div class="no-print" style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Cetak Laporan
+                        </button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                            Tutup
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            
+            // Focus the print window
+            printWindow.focus();
         }
     </script>
 </body>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal Pembelajaran - Admin Guru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="shadcn-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Load required API and layout scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/layout.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: hsl(var(--background));
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Loading animation styles */
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: button-loading-spinner 0.6s linear infinite;
+        }
+
+        @keyframes button-loading-spinner {
+            from {
+                transform: rotate(0turn);
+            }
+            to {
+                transform: rotate(1turn);
+            }
+        }
+        
+        .journal-card {
+            height: 100%;
+        }
+        .journal-card .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .journal-card .card-text {
+            flex-grow: 1;
+        }
+        .journal-date {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .btn-loading .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        .btn-loading {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="flex h-screen bg-gray-50 overflow-hidden">
+        <!-- Sidebar container - hidden on mobile, visible on medium screens and up -->
+        <div id="sidebar-container" class="w-64 bg-white shadow-md hidden md:block"></div>
+        
+        <!-- Main container -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header container -->
+            <div id="header-container"></div>
+            
+            <!-- Content container -->
+            <div class="flex-1 overflow-auto p-4">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl font-semibold">Jurnal Pembelajaran</h2>
+                    <p class="text-muted">Catat aktivitas dan refleksi pembelajaran</p>
+                </div>
+
+                <!-- Journal Form -->
+                <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                    <div class="p-4 bg-blue-500 text-white">
+                        <h3 class="text-lg font-semibold">Tambah Catatan Jurnal</h3>
+                    </div>
+                    <div class="p-4">
+                        <form id="journal-form">
+                            <input type="hidden" id="journal-id">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="journal-date">Tanggal</label>
+                                    <input type="date" class="shadcn-input" id="journal-date" required>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2" for="journal-kelas">Kelas</label>
+                                    <select class="shadcn-select" id="journal-kelas" required>
+                                        <option value="">Pilih Kelas</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="journal-topic">Topik/Materi</label>
+                                <input type="text" class="shadcn-input" id="journal-topic" required placeholder="Masukkan topik pembelajaran">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="journal-description">Deskripsi Kegiatan</label>
+                                <textarea class="shadcn-textarea" id="journal-description" rows="3" required placeholder="Deskripsikan kegiatan pembelajaran"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="journal-reflection">Refleksi</label>
+                                <textarea class="shadcn-textarea" id="journal-reflection" rows="3" placeholder="Refleksi setelah pembelajaran (opsional)"></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="journal-next-plan">Rencana Tindak Lanjut</label>
+                                <textarea class="shadcn-textarea" id="journal-next-plan" rows="2" placeholder="Rencana untuk pembelajaran berikutnya (opsional)"></textarea>
+                            </div>
+                            <div class="flex justify-between">
+                                <button type="button" class="shadcn-btn shadcn-btn-outline" id="reset-form-btn">Reset</button>
+                                <button type="submit" class="shadcn-btn shadcn-btn-primary" id="save-journal-btn">Simpan Jurnal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Filter/Search Section -->
+                <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="filter-kelas">
+                                    Filter Kelas
+                                </label>
+                                <select id="filter-kelas" class="shadcn-select">
+                                    <option value="">Semua Kelas</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="filter-date-start">
+                                    Tanggal Mulai
+                                </label>
+                                <input type="date" id="filter-date-start" class="shadcn-input">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="filter-date-end">
+                                    Tanggal Selesai
+                                </label>
+                                <input type="date" id="filter-date-end" class="shadcn-input">
+                            </div>
+                            <div class="md:col-span-3">
+                                <button class="shadcn-btn shadcn-btn-primary w-full" id="filter-btn">Terapkan Filter</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Journal List -->
+                <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                    <div class="p-4 bg-blue-500 text-white flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Catatan Jurnal</h3>
+                    </div>
+                    <div id="journals-container" class="p-4">
+                        <div class="text-center py-4" id="journals-loading">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            <p class="mt-2 text-gray-500">Memuat data jurnal...</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="journals-list">
+                            <!-- Journal cards will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Konfirmasi Hapus</h3>
+                <button class="text-gray-500 hover:text-gray-700 close-modal-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="mb-4">Apakah Anda yakin ingin menghapus catatan jurnal ini?</p>
+            <div class="flex justify-end space-x-2">
+                <button class="shadcn-btn shadcn-btn-outline close-modal-btn">Batal</button>
+                <button class="shadcn-btn shadcn-btn-destructive" id="confirm-delete-btn">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Journal Modal -->
+    <div id="viewJournalModal" class="modal-overlay hidden">
+        <div class="modal max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Detail Jurnal Pembelajaran</h3>
+                <button class="text-gray-500 hover:text-gray-700 close-modal-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="mb-4">
+                <h4 id="view-journal-topic" class="text-xl font-semibold mb-1"></h4>
+                <p class="text-gray-500">
+                    <span id="view-journal-date"></span> | Kelas: <span id="view-journal-kelas"></span>
+                </p>
+            </div>
+            <div class="mb-4">
+                <h5 class="font-semibold mb-1">Deskripsi Kegiatan:</h5>
+                <p id="view-journal-description" class="text-gray-700"></p>
+            </div>
+            <div class="mb-4">
+                <h5 class="font-semibold mb-1">Refleksi:</h5>
+                <p id="view-journal-reflection" class="text-gray-700"></p>
+            </div>
+            <div class="mb-4">
+                <h5 class="font-semibold mb-1">Rencana Tindak Lanjut:</h5>
+                <p id="view-journal-next-plan" class="text-gray-700"></p>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button class="shadcn-btn shadcn-btn-outline close-modal-btn">Tutup</button>
+                <button class="shadcn-btn shadcn-btn-primary" id="edit-journal-btn">Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // API URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
+
+        // Modal references
+        let deleteModal;
+        let viewJournalModal;
+        
+        // Global state
+        let currentJournalId = null;
+        let allJournals = [];
+        let allClasses = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize layout - this will set up the sidebar and header
+            initLayout();
+            updatePageTitle('Jurnal Pembelajaran');
+            
+            // Set up modals
+            setupModals();
+            
+            // Set today's date as default
+            document.getElementById('journal-date').valueAsDate = new Date();
+
+            // Load data
+            Promise.all([
+                loadKelas(),
+                loadJournals()
+            ]).catch(error => {
+                console.error('Error initializing page:', error);
+                alert('Terjadi kesalahan saat memuat data. Silakan coba lagi.');
+            });
+
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        // Set up modals
+        function setupModals() {
+            // Find all modal close buttons and add event listeners
+            document.querySelectorAll('.close-modal-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.modal-overlay').forEach(modal => {
+                        modal.classList.add('hidden');
+                    });
+                });
+            });
+        }
+
+        // API call function following CORS rules
+        async function callApi(action, params = {}) {
+            try {
+                const formData = new URLSearchParams();
+                formData.append('action', action);
+                
+                // Add other params
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        formData.append(key, String(params[key]));
+                    }
+                }
+                
+                console.log('Calling API:', action, 'with params:', params);
+                
+                // Make fetch request - no custom headers to avoid CORS issues
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Parse response
+                const result = await response.json();
+                console.log('API Response:', result);
+                return result;
+            } catch (error) {
+                console.error('API Error:', error);
+                return { 
+                    success: false, 
+                    error: error.message 
+                };
+            }
+        }
+
+        // Toggle loading state on buttons
+        function toggleButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.classList.add('loading');
+                button.setAttribute('data-original-text', button.textContent);
+                button.textContent = 'Loading...';
+            } else {
+                button.disabled = false;
+                button.classList.remove('loading');
+                button.textContent = button.getAttribute('data-original-text') || 'Submit';
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Form submission
+            document.getElementById('journal-form').addEventListener('submit', handleJournalFormSubmit);
+            
+            // Reset form button
+            document.getElementById('reset-form-btn').addEventListener('click', resetForm);
+            
+            // Delete confirmation
+            document.getElementById('confirm-delete-btn').addEventListener('click', handleDeleteConfirm);
+            
+            // Edit journal button
+            document.getElementById('edit-journal-btn').addEventListener('click', handleEditJournal);
+            
+            // Filter button
+            document.getElementById('filter-btn').addEventListener('click', applyFilters);
+        }
+
+        // Load classes
+        async function loadKelas() {
+            try {
+                const result = await callApi('getKelas');
+                
+                if (result.success) {
+                    allClasses = result.data;
+                    
+                    // Populate class dropdowns
+                    const journalKelasSelect = document.getElementById('journal-kelas');
+                    const filterKelasSelect = document.getElementById('filter-kelas');
+                    
+                    // Clear existing options except the first one
+                    journalKelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+                    filterKelasSelect.innerHTML = '<option value="">Semua Kelas</option>';
+                    
+                    // Add class options
+                    result.data.forEach(kelas => {
+                        journalKelasSelect.innerHTML += `<option value="${kelas.id}">${kelas.nama}</option>`;
+                        filterKelasSelect.innerHTML += `<option value="${kelas.id}">${kelas.nama}</option>`;
+                    });
+                } else {
+                    console.error('Error loading classes:', result.error);
+                    alert('Gagal memuat data kelas. Silakan coba lagi.');
+                }
+            } catch (error) {
+                console.error('Error loading classes:', error);
+                alert('Gagal memuat data kelas. Silakan coba lagi.');
+            }
+        }
+
+        // Load journals
+        async function loadJournals() {
+            try {
+                document.getElementById('journals-loading').style.display = 'block';
+                document.getElementById('journals-list').style.display = 'none';
+                
+                const filterKelas = document.getElementById('filter-kelas').value;
+                const filterDateStart = document.getElementById('filter-date-start').value;
+                const filterDateEnd = document.getElementById('filter-date-end').value;
+                
+                const params = {};
+                if (filterKelas) params.kelasId = filterKelas;
+                if (filterDateStart) params.dateStart = filterDateStart;
+                if (filterDateEnd) params.dateEnd = filterDateEnd;
+                
+                const result = await callApi('getJurnal', params);
+                
+                if (result.success) {
+                    allJournals = result.data || [];
+                    renderJournals(allJournals);
+                } else {
+                    console.error('Error loading journals:', result.error);
+                    alert('Gagal memuat data jurnal. Silakan coba lagi.');
+                }
+            } catch (error) {
+                console.error('Error loading journals:', error);
+                alert('Gagal memuat data jurnal. Silakan coba lagi.');
+            } finally {
+                document.getElementById('journals-loading').style.display = 'none';
+                document.getElementById('journals-list').style.display = 'grid';
+            }
+        }
+
+        // Render journals
+        function renderJournals(journals) {
+            const journalsList = document.getElementById('journals-list');
+            journalsList.innerHTML = '';
+            
+            if (!journals || journals.length === 0) {
+                journalsList.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253M16 6.253v13m0-13C14.832 5.477 13.246 5 11.5 5S8.168 5.477 7 6.253v13C8.168 18.477 9.754 18 11.5 18s3.332.477 4.5 1.253"></path>
+                        </svg>
+                        <p class="mt-3 text-gray-500">Belum ada catatan jurnal. Buat catatan jurnal baru!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort journals by date (newest first)
+            journals.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+            
+            journals.forEach(journal => {
+                const kelasName = allClasses.find(k => k.id === journal.kelasId)?.nama || 'Tidak ada kelas';
+                const formattedDate = formatDate(journal.tanggal);
+                
+                const journalCard = document.createElement('div');
+                journalCard.className = 'bg-white rounded-lg shadow-md overflow-hidden h-full border border-gray-200';
+                journalCard.innerHTML = `
+                    <div class="p-4 flex flex-col h-full">
+                        <h3 class="font-semibold text-lg mb-1">${journal.topik}</h3>
+                        <p class="text-gray-500 text-sm mb-2">
+                            ${formattedDate} | ${kelasName}
+                        </p>
+                        <p class="text-gray-700 mb-4 flex-grow">${truncateText(journal.deskripsi, 100)}</p>
+                        <div class="flex justify-between mt-auto">
+                            <button class="shadcn-btn shadcn-btn-sm shadcn-btn-outline view-journal" data-id="${journal.id}">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                Detail
+                            </button>
+                            <div class="space-x-1">
+                                <button class="shadcn-btn shadcn-btn-sm shadcn-btn-outline edit-journal" data-id="${journal.id}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                    </svg>
+                                </button>
+                                <button class="shadcn-btn shadcn-btn-sm shadcn-btn-outline shadcn-btn-destructive delete-journal" data-id="${journal.id}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                journalsList.appendChild(journalCard);
+                
+                // Add event listeners to buttons
+                journalCard.querySelector('.view-journal').addEventListener('click', () => viewJournal(journal.id));
+                journalCard.querySelector('.edit-journal').addEventListener('click', () => editJournal(journal.id));
+                journalCard.querySelector('.delete-journal').addEventListener('click', () => confirmDelete(journal.id));
+            });
+        }
+
+        // Handle journal form submission
+        async function handleJournalFormSubmit(event) {
+            event.preventDefault();
+            
+            try {
+                const saveJournalBtn = document.getElementById('save-journal-btn');
+                toggleButtonLoading(saveJournalBtn, true);
+                
+                // Get form values
+                const journalId = document.getElementById('journal-id').value;
+                const tanggal = document.getElementById('journal-date').value;
+                const kelasId = document.getElementById('journal-kelas').value;
+                const topik = document.getElementById('journal-topic').value;
+                const deskripsi = document.getElementById('journal-description').value;
+                const refleksi = document.getElementById('journal-reflection').value;
+                const rencanaLanjut = document.getElementById('journal-next-plan').value;
+                
+                // Validate required fields
+                if (!tanggal || !kelasId || !topik || !deskripsi) {
+                    alert('Silahkan lengkapi semua field yang wajib diisi.');
+                    return;
+                }
+                
+                const params = {
+                    tanggal,
+                    kelasId,
+                    topik,
+                    deskripsi,
+                    refleksi,
+                    rencanaLanjut
+                };
+                
+                // Determine if this is a create or update operation
+                let result;
+                if (journalId) {
+                    params.id = journalId;
+                    result = await callApi('updateJurnal', params);
+                } else {
+                    result = await callApi('createJurnal', params);
+                }
+                
+                if (result.success) {
+                    alert(journalId ? 'Jurnal berhasil diperbarui!' : 'Jurnal baru berhasil disimpan!');
+                    resetForm();
+                    loadJournals();
+                } else {
+                    alert(`Gagal ${journalId ? 'memperbarui' : 'menyimpan'} jurnal: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error saving journal:', error);
+                alert('Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
+            } finally {
+                toggleButtonLoading(document.getElementById('save-journal-btn'), false);
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('journal-id').value = '';
+            document.getElementById('journal-date').valueAsDate = new Date();
+            document.getElementById('journal-kelas').value = '';
+            document.getElementById('journal-topic').value = '';
+            document.getElementById('journal-description').value = '';
+            document.getElementById('journal-reflection').value = '';
+            document.getElementById('journal-next-plan').value = '';
+            
+            // Change button text
+            document.getElementById('save-journal-btn').textContent = 'Simpan Jurnal';
+        }
+
+        // View journal
+        function viewJournal(id) {
+            const journal = allJournals.find(j => j.id === id);
+            if (!journal) return;
+            
+            const kelas = allClasses.find(k => k.id === journal.kelasId);
+            
+            document.getElementById('view-journal-topic').textContent = journal.topik;
+            document.getElementById('view-journal-date').textContent = formatDate(journal.tanggal);
+            document.getElementById('view-journal-kelas').textContent = kelas ? kelas.nama : 'Tidak ada kelas';
+            document.getElementById('view-journal-description').textContent = journal.deskripsi || '-';
+            document.getElementById('view-journal-reflection').textContent = journal.refleksi || '-';
+            document.getElementById('view-journal-next-plan').textContent = journal.rencanaLanjut || '-';
+            
+            currentJournalId = id;
+            document.getElementById('viewJournalModal').classList.remove('hidden');
+        }
+
+        // Handle edit button in view modal
+        function handleEditJournal() {
+            document.getElementById('viewJournalModal').classList.add('hidden');
+            editJournal(currentJournalId);
+        }
+
+        // Edit journal
+        function editJournal(id) {
+            const journal = allJournals.find(j => j.id === id);
+            if (!journal) return;
+            
+            document.getElementById('journal-id').value = journal.id;
+            document.getElementById('journal-date').value = journal.tanggal;
+            document.getElementById('journal-kelas').value = journal.kelasId;
+            document.getElementById('journal-topic').value = journal.topik;
+            document.getElementById('journal-description').value = journal.deskripsi;
+            document.getElementById('journal-reflection').value = journal.refleksi || '';
+            document.getElementById('journal-next-plan').value = journal.rencanaLanjut || '';
+            
+            // Change button text
+            document.getElementById('save-journal-btn').textContent = 'Perbarui Jurnal';
+            
+            // Scroll to form
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Confirm delete
+        function confirmDelete(id) {
+            currentJournalId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        // Handle delete confirmation
+        async function handleDeleteConfirm() {
+            try {
+                if (!currentJournalId) return;
+                
+                const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+                toggleButtonLoading(confirmDeleteBtn, true);
+                
+                const result = await callApi('deleteJurnal', { id: currentJournalId });
+                
+                if (result.success) {
+                    alert('Jurnal berhasil dihapus!');
+                    document.getElementById('deleteModal').classList.add('hidden');
+                    loadJournals();
+                } else {
+                    alert(`Gagal menghapus jurnal: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error deleting journal:', error);
+                alert('Terjadi kesalahan saat menghapus data. Silakan coba lagi.');
+            } finally {
+                toggleButtonLoading(document.getElementById('confirm-delete-btn'), false);
+                currentJournalId = null;
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            loadJournals();
+        }
+
+        // Helper: Format date
+        function formatDate(dateString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+
+        // Helper: Truncate text
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+    </script>
+</body>
+</html> 
