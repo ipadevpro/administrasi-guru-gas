@@ -1,0 +1,112 @@
+/* Toast notification styles */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 200;
+    max-width: 420px;
+    width: 100%;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    animation: toast-enter 0.2s ease-out;
+    overflow: hidden;
+    transform-origin: bottom;
+}
+
+.toast-success {
+    background-color: hsl(143, 85%, 96%);
+    border: 1px solid hsl(145, 92%, 91%);
+    color: hsl(140, 100%, 27%);
+}
+
+.toast-error {
+    background-color: hsl(359, 100%, 97%);
+    border: 1px solid hsl(359, 100%, 94%);
+    color: hsl(360, 100%, 45%);
+}
+
+.toast-info {
+    background-color: hsl(221, 83%, 97%);
+    border: 1px solid hsl(224, 76%, 93%);
+    color: hsl(226, 100%, 50%);
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    margin-right: 0.75rem;
+    width: 20px;
+    height: 20px;
+}
+
+.toast-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.toast-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    margin-left: 0.75rem;
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    background-color: currentColor;
+    opacity: 0.4;
+}
+
+@keyframes toast-enter {
+    0% {
+        transform: translateY(16px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toast-leave {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes toast-progress {
+    0% {
+        width: 100%;
+    }
+    100% {
+        width: 0%;
+    }
+} 

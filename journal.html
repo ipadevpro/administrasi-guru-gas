@@ -6,10 +6,13 @@
     <title>Jurnal Pembelajaran - Admin Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
+    <link rel="stylesheet" href="toast.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Load required API and layout scripts -->
     <script src="js/api.js"></script>
     <script src="js/layout.js"></script>
+    <script src="js/sidebar-fix.js"></script>
+    <script src="toast.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -109,6 +112,19 @@
             
             <!-- Content container -->
             <div class="flex-1 overflow-auto p-4">
+                <!-- Emergency Navigation Menu (for when sidebar is not working) -->
+                <div class="mb-6 bg-white shadow-md rounded-lg p-4">
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        <a href="dashboard.html" class="shadcn-btn shadcn-btn-sm shadcn-btn-outline">Dashboard</a>
+                        <a href="classes.html" class="shadcn-btn shadcn-btn-sm shadcn-btn-outline">Kelas</a>
+                        <a href="students.html" class="shadcn-btn shadcn-btn-sm shadcn-btn-outline">Siswa</a>
+                        <a href="assignments.html" class="shadcn-btn shadcn-btn-sm shadcn-btn-outline">Tugas</a>
+                        <a href="grades.html" class="shadcn-btn shadcn-btn-sm shadcn-btn-outline">Nilai</a>
+                        <a href="attendance.html" class="shadcn-btn shadcn-btn-sm shadcn-btn-outline">Presensi</a>
+                        <a href="journal.html" class="shadcn-btn shadcn-btn-primary">Jurnal</a>
+                    </div>
+                </div>
+                
                 <div class="mb-6 flex justify-between items-center">
                     <h2 class="text-2xl font-semibold">Jurnal Pembelajaran</h2>
                     <p class="text-muted">Catat aktivitas dan refleksi pembelajaran</p>
@@ -263,7 +279,9 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
     <script>
         // API URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
@@ -295,7 +313,7 @@
                 loadJournals()
             ]).catch(error => {
                 console.error('Error initializing page:', error);
-                alert('Terjadi kesalahan saat memuat data. Silakan coba lagi.');
+                showToast('error', 'Terjadi kesalahan saat memuat data. Silakan coba lagi.');
             });
 
             // Set up event listeners
@@ -403,11 +421,11 @@
                     });
                 } else {
                     console.error('Error loading classes:', result.error);
-                    alert('Gagal memuat data kelas. Silakan coba lagi.');
+                    showToast('error', 'Gagal memuat data kelas. Silakan coba lagi.');
                 }
             } catch (error) {
                 console.error('Error loading classes:', error);
-                alert('Gagal memuat data kelas. Silakan coba lagi.');
+                showToast('error', 'Gagal memuat data kelas. Silakan coba lagi.');
             }
         }
 
@@ -433,11 +451,11 @@
                     renderJournals(allJournals);
                 } else {
                     console.error('Error loading journals:', result.error);
-                    alert('Gagal memuat data jurnal. Silakan coba lagi.');
+                    showToast('error', 'Gagal memuat data jurnal. Silakan coba lagi.');
                 }
             } catch (error) {
                 console.error('Error loading journals:', error);
-                alert('Gagal memuat data jurnal. Silakan coba lagi.');
+                showToast('error', 'Gagal memuat data jurnal. Silakan coba lagi.');
             } finally {
                 document.getElementById('journals-loading').style.display = 'none';
                 document.getElementById('journals-list').style.display = 'grid';
@@ -529,7 +547,7 @@
                 
                 // Validate required fields
                 if (!tanggal || !kelasId || !topik || !deskripsi) {
-                    alert('Silahkan lengkapi semua field yang wajib diisi.');
+                    showToast('error', 'Silahkan lengkapi semua field yang wajib diisi.');
                     return;
                 }
                 
@@ -552,15 +570,15 @@
                 }
                 
                 if (result.success) {
-                    alert(journalId ? 'Jurnal berhasil diperbarui!' : 'Jurnal baru berhasil disimpan!');
+                    showToast('success', journalId ? 'Jurnal berhasil diperbarui!' : 'Jurnal baru berhasil disimpan!');
                     resetForm();
                     loadJournals();
                 } else {
-                    alert(`Gagal ${journalId ? 'memperbarui' : 'menyimpan'} jurnal: ${result.error}`);
+                    showToast('error', `Gagal ${journalId ? 'memperbarui' : 'menyimpan'} jurnal: ${result.error}`);
                 }
             } catch (error) {
                 console.error('Error saving journal:', error);
-                alert('Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
+                showToast('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
             } finally {
                 toggleButtonLoading(document.getElementById('save-journal-btn'), false);
             }
@@ -641,15 +659,15 @@
                 const result = await callApi('deleteJurnal', { id: currentJournalId });
                 
                 if (result.success) {
-                    alert('Jurnal berhasil dihapus!');
+                    showToast('success', 'Jurnal berhasil dihapus!');
                     document.getElementById('deleteModal').classList.add('hidden');
                     loadJournals();
                 } else {
-                    alert(`Gagal menghapus jurnal: ${result.error}`);
+                    showToast('error', `Gagal menghapus jurnal: ${result.error}`);
                 }
             } catch (error) {
                 console.error('Error deleting journal:', error);
-                alert('Terjadi kesalahan saat menghapus data. Silakan coba lagi.');
+                showToast('error', 'Terjadi kesalahan saat menghapus data. Silakan coba lagi.');
             } finally {
                 toggleButtonLoading(document.getElementById('confirm-delete-btn'), false);
                 currentJournalId = null;

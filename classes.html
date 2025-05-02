@@ -6,6 +6,7 @@
     <title>Kelas - Teacher Administration Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
+    <link rel="stylesheet" href="toast.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -208,9 +209,14 @@
         </div>
     </div>
     
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
     <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/layout.js"></script>
+    <script src="js/sidebar-fix.js"></script>
+    <script src="toast.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize layout
@@ -491,9 +497,15 @@
         
         // Show delete confirmation modal
         function showDeleteModal(id) {
+            console.log('Showing delete modal for class ID:', id);
             const kelas = classes.find(k => k.id === id || k.kelas_id === id);
-            if (!kelas) return;
+            if (!kelas) {
+                console.error('Class not found with ID:', id);
+                showToast('error', 'Kelas tidak ditemukan.');
+                return;
+            }
             
+            console.log('Class found:', kelas);
             deleteClassId = id;
             document.getElementById('delete-class-name').textContent = kelas.nama || kelas.nama_kelas || '';
             document.getElementById('delete-modal').classList.remove('hidden');
@@ -608,12 +620,28 @@
                                 };
                             }
                         } else {
-                            // Add new class to the array
-                            classes.push({
-                                ...response.data,
-                                id: response.data.id || response.data.kelas_id,
-                                kelas_id: response.data.id || response.data.kelas_id
-                            });
+                            // When adding a new class, use the form data plus the new ID
+                            const newClassId = response.data.id || response.data.kelas_id;
+                            
+                            // Create a new class object with both form data and response data
+                            const newClass = {
+                                ...kelasData, // Include all the form data
+                                ...response.data, // Include any additional data from the response
+                                id: newClassId,
+                                kelas_id: newClassId,
+                                // Ensure we have all the fields needed by the table renderer
+                                nama: kelasData.nama,
+                                nama_kelas: kelasData.nama,
+                                tahun_ajaran: kelasData.tahun_ajaran,
+                                tahunAjaran: kelasData.tahun_ajaran,
+                                wali_kelas: kelasData.wali_kelas,
+                                waliKelas: kelasData.wali_kelas,
+                                deskripsi: kelasData.deskripsi,
+                                desc: kelasData.deskripsi
+                            };
+                            
+                            console.log('Adding new class to list:', newClass);
+                            classes.push(newClass);
                         }
                         
                         // Update the table immediately
@@ -623,14 +651,14 @@
                         await loadClasses();
                     }
                     
-                    alert(`Kelas berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
+                    showToast('success', `Kelas berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    alert(`Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} kelas: ${errorMsg}`);
+                    showToast('error', `Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} kelas: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error saving class:', error);
-                alert(`Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} kelas. Periksa konsol untuk detail.`);
+                showToast('error', `Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} kelas. Periksa konsol untuk detail.`);
             } finally {
                 setButtonLoading(submitButton, false);
             }
@@ -641,43 +669,52 @@
             const confirmButton = document.getElementById('confirm-delete-btn');
             setButtonLoading(confirmButton, true);
             
-            const id = window.deleteClassId;
-            if (!id) {
+            console.log('Attempting to delete class with ID:', deleteClassId);
+            
+            if (!deleteClassId) {
                 alert('ID kelas tidak valid.');
+                console.error('Delete failed: deleteClassId is null or undefined');
                 setButtonLoading(confirmButton, false);
+                hideDeleteModal();
                 return;
             }
             
             try {
+                console.log('Deleting class with ID:', deleteClassId);
                 let response;
                 try {
-                    response = await deleteKelas(id);
+                    response = await deleteKelas(deleteClassId);
                 } catch (functionError) {
                     console.warn('API function error:', functionError);
                     
                     // Fall back to direct API call
                     const formData = new URLSearchParams();
                     formData.append('action', 'deleteKelas');
-                    formData.append('id', id);
-                    formData.append('kelas_id', id);
+                    formData.append('id', deleteClassId);
                     
+                    console.log('Sending direct delete request with ID:', deleteClassId);
                     response = await fetch(API_URL, {
                         method: 'POST',
                         body: formData
                     }).then(res => res.json());
+                    
+                    console.log('Direct delete API response:', response);
                 }
                 
                 if (response && response.success) {
                     hideDeleteModal();
-                    window.deleteClassId = null;
+                    deleteClassId = null;
                     await loadClasses();
+                    console.log('Class deleted successfully');
+                    showToast('success', 'Kelas berhasil dihapus.');
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    alert(`Gagal menghapus kelas: ${errorMsg}`);
+                    console.error('Delete API error:', errorMsg);
+                    showToast('error', `Gagal menghapus kelas: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error deleting class:', error);
-                alert('Terjadi kesalahan saat menghapus kelas: ' + error.message);
+                showToast('error', 'Terjadi kesalahan saat menghapus kelas: ' + error.message);
             } finally {
                 setButtonLoading(confirmButton, false);
             }

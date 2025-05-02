@@ -6,10 +6,13 @@
     <title>Tugas - Teacher Administration Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
+    <link rel="stylesheet" href="toast.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Load required API and layout scripts -->
     <script src="js/api.js"></script>
     <script src="js/layout.js"></script>
+    <script src="js/sidebar-fix.js"></script>
+    <script src="toast.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -276,7 +279,9 @@
         </div>
     </div>
     
-    <!-- Scripts -->
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize layout
@@ -648,7 +653,7 @@
             
             if (!tugas) {
                 console.error("Assignment not found with ID:", id);
-                alert("Error: Assignment not found with ID: " + id);
+                showToast('error', "Error: Assignment not found with ID: " + id);
                 return;
             }
             
@@ -691,7 +696,7 @@
             
             if (!tugas) {
                 console.error("Assignment not found with ID:", id);
-                alert("Error: Assignment not found with ID: " + id);
+                showToast('error', "Error: Assignment not found with ID: " + id);
                 return;
             }
             
@@ -804,13 +809,15 @@
                     hideModal();
                     await loadData();
                     applyFilters(); // Re-apply any active filters
+                    
+                    showToast('success', `Tugas berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    alert(`Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} tugas: ${errorMsg}`);
+                    showToast('error', `Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} tugas: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error saving assignment:', error);
-                alert(`Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} tugas. Periksa konsol untuk detail.`);
+                showToast('error', `Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} tugas. Periksa konsol untuk detail.`);
             } finally {
                 setButtonLoading(submitButton, false);
             }
@@ -827,7 +834,8 @@
             
             if (!assignmentIdToDelete || assignmentIdToDelete === 'undefined') {
                 console.error('Invalid assignment ID to delete:', assignmentIdToDelete);
-                alert('Error: Invalid assignment ID to delete');
+                showToast('error', 'Error: Invalid assignment ID to delete');
+                setButtonLoading(confirmButton, false);
                 return;
             }
             
@@ -876,13 +884,15 @@
                     window.deleteAssignmentId = null;
                     await loadData();
                     applyFilters(); // Re-apply any active filters
+                    
+                    showToast('success', 'Tugas berhasil dihapus.');
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    alert(`Gagal menghapus tugas: ${errorMsg}`);
+                    showToast('error', `Gagal menghapus tugas: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error deleting assignment:', error);
-                alert('Terjadi kesalahan saat menghapus tugas: ' + error.message);
+                showToast('error', 'Terjadi kesalahan saat menghapus tugas: ' + error.message);
             } finally {
                 setButtonLoading(confirmButton, false);
             }
