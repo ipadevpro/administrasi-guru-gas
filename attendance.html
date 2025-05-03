@@ -327,6 +327,64 @@
         </div>
     </div>
     
+    <!-- Print Report Modal -->
+    <div id="print-report-modal" class="modal-overlay hidden">
+        <div class="modal max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Cetak Laporan Presensi</h3>
+                <button id="close-print-modal-btn" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="print-class">
+                    Kelas
+                </label>
+                <select id="print-class" class="shadcn-select w-full">
+                    <option value="">Pilih Kelas</option>
+                    <!-- Will be populated from classes data -->
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex items-center mb-2">
+                    <input type="radio" id="print-single-day" name="date-range-type" value="single" checked class="mr-2">
+                    <label for="print-single-day" class="text-gray-700 text-sm font-bold">Tanggal Tunggal</label>
+                </div>
+                <input type="date" id="print-date" class="shadcn-input w-full">
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex items-center mb-2">
+                    <input type="radio" id="print-date-range" name="date-range-type" value="range" class="mr-2">
+                    <label for="print-date-range" class="text-gray-700 text-sm font-bold">Rentang Tanggal</label>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-gray-700 text-xs mb-1" for="print-start-date">Tanggal Mulai</label>
+                        <input type="date" id="print-start-date" class="shadcn-input w-full">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs mb-1" for="print-end-date">Tanggal Selesai</label>
+                        <input type="date" id="print-end-date" class="shadcn-input w-full">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button type="button" id="cancel-print-btn" class="shadcn-btn shadcn-btn-outline mr-2">
+                    Batal
+                </button>
+                <button type="button" id="confirm-print-btn" class="shadcn-btn shadcn-btn-primary">
+                    Cetak Laporan
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
     
@@ -340,6 +398,13 @@
             const today = new Date();
             document.getElementById('filter-date').valueAsDate = today;
             document.getElementById('attendance-date').textContent = formatDate(today);
+            
+            // Set today's date for print report
+            document.getElementById('print-date').valueAsDate = today;
+            document.getElementById('print-start-date').valueAsDate = today;
+            
+            // Set end date to today by default
+            document.getElementById('print-end-date').valueAsDate = today;
             
             // Load data
             loadData();
@@ -360,6 +425,12 @@
             document.getElementById('cancel-delete-btn').addEventListener('click', hideDeleteModal);
             document.getElementById('confirm-delete-btn').addEventListener('click', deleteAttendance);
             
+            // Print report modal event listeners
+            document.getElementById('print-report-btn').addEventListener('click', showPrintReportModal);
+            document.getElementById('close-print-modal-btn').addEventListener('click', hidePrintReportModal);
+            document.getElementById('cancel-print-btn').addEventListener('click', hidePrintReportModal);
+            document.getElementById('confirm-print-btn').addEventListener('click', generatePrintReport);
+            
             // Filter event listeners
             document.getElementById('filter-class').addEventListener('change', applyFilters);
             document.getElementById('filter-date').addEventListener('change', applyFilters);
@@ -367,9 +438,6 @@
             
             // Modal class selection
             document.getElementById('modal-class').addEventListener('change', loadStudentsForClass);
-            
-            // Print report
-            document.getElementById('print-report-btn').addEventListener('click', printReport);
         });
         
         // Global variables
@@ -553,53 +621,29 @@
         
         // Populate class dropdowns
         function populateClassDropdowns() {
-            if (!classes || !Array.isArray(classes) || classes.length === 0) {
-                console.warn('No classes available for dropdown');
+            const filterClassSelect = document.getElementById('filter-class');
+            const modalClassSelect = document.getElementById('modal-class');
+            const printClassSelect = document.getElementById('print-class');
+            
+            // Clear existing options
+            filterClassSelect.innerHTML = '<option value="">Semua Kelas</option>';
+            modalClassSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+            printClassSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+            
+            if (classes.length === 0) {
+                console.warn('No classes available for dropdowns');
                 return;
             }
             
-            // Sort classes by name
-            classes.sort((a, b) => {
-                const nameA = a.nama || a.nama_kelas || '';
-                const nameB = b.nama || b.nama_kelas || '';
-                return nameA.localeCompare(nameB);
+            classes.forEach(kelas => {
+                const id = kelas.id || kelas.kelas_id || '';
+                const nama = kelas.nama || kelas.nama_kelas || 'Unknown';
+                
+                const option = `<option value="${id}">${nama}</option>`;
+                filterClassSelect.innerHTML += option;
+                modalClassSelect.innerHTML += option;
+                printClassSelect.innerHTML += option;
             });
-            
-            // Filter dropdown
-            const filterSelect = document.getElementById('filter-class');
-            if (filterSelect) {
-                filterSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                
-                classes.forEach(kelas => {
-                    const id = kelas.id || kelas.kelas_id;
-                    const nama = kelas.nama || kelas.nama_kelas || 'Kelas Tanpa Nama';
-                    
-                    if (id) {
-                        const option = document.createElement('option');
-                        option.value = id;
-                        option.textContent = nama;
-                        filterSelect.appendChild(option);
-                    }
-                });
-            }
-            
-            // Modal dropdown
-            const modalSelect = document.getElementById('modal-class');
-            if (modalSelect) {
-                modalSelect.innerHTML = '<option value="">Pilih Kelas</option>';
-                
-                classes.forEach(kelas => {
-                    const id = kelas.id || kelas.kelas_id;
-                    const nama = kelas.nama || kelas.nama_kelas || 'Kelas Tanpa Nama';
-                    
-                    if (id) {
-                        const option = document.createElement('option');
-                        option.value = id;
-                        option.textContent = nama;
-                        modalSelect.appendChild(option);
-                    }
-                });
-            }
         }
         
         // Render attendance table
@@ -1456,10 +1500,36 @@
             }
         }
         
+        // Show print report modal
+        function showPrintReportModal() {
+            // Copy current filters to print modal
+            const currentClassFilter = document.getElementById('filter-class').value;
+            const currentDateFilter = document.getElementById('filter-date').value;
+            
+            // Set values in print modal
+            if (currentClassFilter) {
+                document.getElementById('print-class').value = currentClassFilter;
+            }
+            
+            if (currentDateFilter) {
+                document.getElementById('print-date').value = currentDateFilter;
+                
+                // Also set as start date for range
+                document.getElementById('print-start-date').value = currentDateFilter;
+                document.getElementById('print-end-date').value = currentDateFilter;
+            }
+            
+            document.getElementById('print-report-modal').classList.remove('hidden');
+        }
+        
+        // Hide print report modal
+        function hidePrintReportModal() {
+            document.getElementById('print-report-modal').classList.add('hidden');
+        }
+        
         // Print attendance report
-        function printReport() {
-            const classFilter = document.getElementById('filter-class').value;
-            const dateFilter = document.getElementById('filter-date').value;
+        function generatePrintReport() {
+            const classFilter = document.getElementById('print-class').value;
             
             // Must have at least class filter
             if (!classFilter) {
@@ -1467,15 +1537,81 @@
                 return;
             }
             
-            // Prepare filtered data
-            const filteredData = applyFiltersToData(attendanceRecords);
+            // Determine if using single date or date range
+            const useDateRange = document.getElementById('print-date-range').checked;
+            
+            let filteredData = [];
+            let reportDateTitle = '';
+            
+            if (useDateRange) {
+                const startDate = document.getElementById('print-start-date').value;
+                const endDate = document.getElementById('print-end-date').value;
+                
+                if (!startDate || !endDate) {
+                    showToast('error', 'Pilih tanggal mulai dan tanggal selesai untuk rentang waktu.');
+                    return;
+                }
+                
+                // Validate date range
+                if (new Date(startDate) > new Date(endDate)) {
+                    showToast('error', 'Tanggal mulai tidak boleh lebih besar dari tanggal selesai.');
+                    return;
+                }
+                
+                // Filter data by date range
+                filteredData = attendanceRecords.filter(record => {
+                    // First filter by class
+                    const recordKelasId = record.kelas_id || '';
+                    if (classFilter !== '' && recordKelasId !== classFilter) {
+                        return false;
+                    }
+                    
+                    // Then filter by date range
+                    const recordDate = new Date(record.tanggal);
+                    const startDateObj = new Date(startDate);
+                    const endDateObj = new Date(endDate);
+                    
+                    // Set time to start/end of day for proper comparison
+                    startDateObj.setHours(0, 0, 0, 0);
+                    endDateObj.setHours(23, 59, 59, 999);
+                    
+                    return recordDate >= startDateObj && recordDate <= endDateObj;
+                });
+                
+                reportDateTitle = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+            } else {
+                const singleDate = document.getElementById('print-date').value;
+                
+                if (!singleDate) {
+                    showToast('error', 'Pilih tanggal untuk mencetak laporan.');
+                    return;
+                }
+                
+                // Filter data by single date
+                filteredData = attendanceRecords.filter(record => {
+                    // First filter by class
+                    const recordKelasId = record.kelas_id || '';
+                    if (classFilter !== '' && recordKelasId !== classFilter) {
+                        return false;
+                    }
+                    
+                    // Then filter by date
+                    const recordDate = new Date(record.tanggal).toISOString().split('T')[0];
+                    return recordDate === singleDate;
+                });
+                
+                reportDateTitle = formatDate(singleDate);
+            }
             
             // Get class name
             const kelasObj = classes.find(k => (k.id === classFilter || k.kelas_id === classFilter));
             const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '-') : '-';
             
-            // Format date for title
-            const reportDate = dateFilter ? formatDate(dateFilter) : 'Semua Tanggal';
+            // Calculate statistics for the filtered data
+            const totalStudents = students.filter(s => s.kelas_id === classFilter || s.kelas === classFilter).length;
+            const presentCount = filteredData.filter(r => r.status === 'Hadir').length;
+            const excusedCount = filteredData.filter(r => r.status === 'Izin' || r.status === 'Sakit').length;
+            const absentCount = filteredData.filter(r => r.status === 'Alfa').length;
             
             // Create print window
             const printWindow = window.open('', '', 'height=600,width=800');
@@ -1504,24 +1640,24 @@
                 <body>
                     <h2>Laporan Presensi Siswa</h2>
                     <h3>${kelasNama}</h3>
-                    <div class="date">${reportDate}</div>
+                    <div class="date">${reportDateTitle}</div>
                     
                     <div class="stats">
                         <div class="stat-box">
                             <div>Total Siswa</div>
-                            <div class="stat-value">${document.getElementById('total-students').textContent}</div>
+                            <div class="stat-value">${totalStudents}</div>
                         </div>
                         <div class="stat-box">
                             <div>Hadir</div>
-                            <div class="stat-value present">${document.getElementById('present-count').textContent}</div>
+                            <div class="stat-value present">${presentCount}</div>
                         </div>
                         <div class="stat-box">
                             <div>Izin/Sakit</div>
-                            <div class="stat-value excused">${document.getElementById('excused-count').textContent}</div>
+                            <div class="stat-value excused">${excusedCount}</div>
                         </div>
                         <div class="stat-box">
                             <div>Alfa</div>
-                            <div class="stat-value absent">${document.getElementById('absent-count').textContent}</div>
+                            <div class="stat-value absent">${absentCount}</div>
                         </div>
                     </div>
                     
@@ -1585,6 +1721,14 @@
             
             printWindow.document.close();
             printWindow.focus();
+            
+            // Hide modal after generating report
+            hidePrintReportModal();
+        }
+        
+        // Print attendance report (old function - keeping for backwards compatibility)
+        function printReport() {
+            showPrintReportModal();
         }
         
         // Add a method to clear cache if needed
