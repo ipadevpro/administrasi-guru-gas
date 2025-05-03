@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamifikasi - Admin Guru</title>
+    <title>Gamifikasi - KelasGuru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
     <link rel="stylesheet" href="toast.css">
@@ -93,33 +93,33 @@
         }
         
         .level-badge-1 {
-            background-color: #E5E7EB;
-            color: #374151;
+            background-color: hsl(var(--muted) / 0.7);
+            color: hsl(var(--muted-foreground));
         }
         
         .level-badge-2 {
-            background-color: #DBEAFE;
-            color: #1E40AF;
+            background-color: hsl(var(--primary) / 0.2);
+            color: hsl(var(--primary));
         }
         
         .level-badge-3 {
-            background-color: #D1FAE5;
-            color: #065F46;
+            background-color: hsl(var(--success) / 0.2);
+            color: hsl(var(--success));
         }
         
         .level-badge-4 {
-            background-color: #FEF3C7;
-            color: #92400E;
+            background-color: hsl(var(--warning) / 0.2);
+            color: hsl(var(--warning));
         }
         
         .level-badge-5 {
-            background-color: #FEE2E2;
-            color: #991B1B;
+            background-color: hsl(var(--destructive) / 0.2);
+            color: hsl(var(--destructive));
         }
         
         .tabs {
             display: flex;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid hsl(var(--border));
             margin-bottom: 1rem;
         }
         
@@ -128,11 +128,13 @@
             font-weight: 500;
             border-bottom: 2px solid transparent;
             cursor: pointer;
+            color: hsl(var(--muted-foreground));
+            transition: color 0.2s, border-color 0.2s;
         }
         
         .tab.active {
-            border-bottom-color: #3b82f6;
-            color: #3b82f6;
+            border-bottom-color: hsl(var(--primary));
+            color: hsl(var(--primary));
         }
         
         .tab-content {
@@ -141,6 +143,82 @@
         
         .tab-content.active {
             display: block;
+        }
+
+        /* Shadcn UI Table styles */
+        .shadcn-table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 0.5rem;
+            border: 1px solid hsl(var(--border));
+            background-color: hsl(var(--background));
+        }
+
+        .shadcn-table {
+            width: 100%;
+            caption-side: bottom;
+            border-collapse: collapse;
+        }
+
+        .shadcn-table th {
+            height: 48px;
+            padding: 0 1rem;
+            text-align: left;
+            vertical-align: middle;
+            font-weight: 500;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            color: hsl(var(--muted-foreground));
+            background-color: hsl(var(--muted) / 0.1);
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .shadcn-table tr {
+            border-bottom: 1px solid hsl(var(--border));
+            transition: background-color 0.2s;
+        }
+
+        .shadcn-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .shadcn-table tr:hover {
+            background-color: hsl(var(--muted) / 0.1);
+        }
+
+        .shadcn-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            font-size: 0.875rem;
+        }
+
+        .shadcn-table-header {
+            position: sticky;
+            top: 0;
+            background-color: hsl(var(--background));
+            z-index: 1;
+        }
+
+        .shadcn-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+            text-align: center;
+        }
+
+        .shadcn-empty-icon {
+            height: 3rem;
+            width: 3rem;
+            color: hsl(var(--muted-foreground) / 0.5);
+            margin-bottom: 1rem;
+        }
+
+        .shadcn-empty-text {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+            line-height: 1.25rem;
         }
     </style>
 </head>
@@ -172,9 +250,9 @@
                 <div id="xp-tab" class="tab-content active">
                     <!-- XP Management Section -->
                     <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
-                        <div class="p-4 bg-blue-500 text-white flex justify-between items-center">
+                        <div class="p-4 bg-primary text-primary-foreground flex justify-between items-center">
                             <h3 class="text-lg font-semibold">Manajemen Poin XP</h3>
-                            <button id="add-xp-btn" class="px-3 py-1 bg-white text-blue-500 rounded-md hover:bg-blue-50">
+                            <button id="add-xp-btn" class="px-3 py-1 bg-background text-primary rounded-md hover:bg-muted/80">
                                 Tambah XP
                             </button>
                         </div>
@@ -227,7 +305,7 @@
                     
                     <!-- XP Summary Section -->
                     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                        <div class="p-4 bg-green-500 text-white">
+                        <div class="p-4 bg-success text-success-foreground">
                             <h3 class="text-lg font-semibold">Ringkasan XP dan Level</h3>
                         </div>
                         <div class="p-4">
@@ -246,9 +324,9 @@
                 <div id="badges-tab" class="tab-content">
                     <!-- Badges Management Section -->
                     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                        <div class="p-4 bg-purple-500 text-white flex justify-between items-center">
+                        <div class="p-4 bg-secondary text-secondary-foreground flex justify-between items-center">
                             <h3 class="text-lg font-semibold">Manajemen Badge</h3>
-                            <button id="add-badge-btn" class="px-3 py-1 bg-white text-purple-500 rounded-md hover:bg-purple-50">
+                            <button id="add-badge-btn" class="px-3 py-1 bg-background text-secondary rounded-md hover:bg-muted/80">
                                 Tambah Badge
                             </button>
                         </div>
@@ -256,7 +334,7 @@
                         <!-- Badges List -->
                         <div class="p-4">
                             <div id="badges-loading" class="text-center py-4">
-                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
                                 <p class="mt-2 text-gray-500">Memuat data badge...</p>
                             </div>
                             <div id="badges-list" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -270,9 +348,9 @@
                 <div id="student-badges-tab" class="tab-content">
                     <!-- Student Badges Management Section -->
                     <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                        <div class="p-4 bg-amber-500 text-white flex justify-between items-center">
+                        <div class="p-4 bg-warning text-warning-foreground flex justify-between items-center">
                             <h3 class="text-lg font-semibold">Manajemen Badge Siswa</h3>
-                            <button id="add-student-badge-btn" class="px-3 py-1 bg-white text-amber-500 rounded-md hover:bg-amber-50">
+                            <button id="add-student-badge-btn" class="px-3 py-1 bg-background text-warning rounded-md hover:bg-muted/80">
                                 Berikan Badge
                             </button>
                         </div>
@@ -766,7 +844,11 @@
         // Ensure API_URL is defined
         if (typeof API_URL === 'undefined') {
             console.warn('API_URL not defined, using default URL');
+            // Primary URL
             window.API_URL = 'https://script.google.com/macros/s/AKfycbzmzrbEGpVZxm4NskhdZ_WOh41-GKeIn1ryxg1jkxHIfGtG5vHDKzN49J5oYx1amu_iRQ/exec';
+            
+            // Backup URL in case the primary fails
+            window.BACKUP_API_URL = 'https://script.google.com/macros/s/AKfycbxZVwdUIupr3e3ljw-lVaZMeNuEk7rV9GOYFxshyUaJKmi3TKCsGL6B5EaLSNeJtsmIzg/exec';
         }
         
         console.log('Using API URL:', API_URL);
@@ -886,49 +968,84 @@
             }
         }
         
-        // API call function following CORS rules
-        async function callApi(action, params = {}) {
-            try {
-                console.log(`Calling API: ${action} with params:`, params);
-                
-                // Create form data with URLSearchParams for proper encoding
-                const formData = new URLSearchParams();
-                formData.append('action', action);
-                
-                // Add other params, ensuring they are strings
-                for (const key in params) {
-                    if (params.hasOwnProperty(key)) {
-                        const value = params[key];
-                        formData.append(key, String(value));
+        // API call function following CORS rules with retry logic
+        async function callApi(action, params = {}, maxRetries = 2) {
+            let retries = 0;
+            let useBackupUrl = false;
+            
+            while (retries <= maxRetries) {
+                try {
+                    const currentUrl = useBackupUrl ? BACKUP_API_URL : API_URL;
+                    console.log(`Calling API (${useBackupUrl ? 'BACKUP' : 'PRIMARY'}): ${action} with params:`, params, `(Attempt ${retries + 1}/${maxRetries + 1})`);
+                    
+                    // Create form data with URLSearchParams for proper encoding
+                    const formData = new URLSearchParams();
+                    formData.append('action', action);
+                    
+                    // Add other params, ensuring they are strings
+                    for (const key in params) {
+                        if (params.hasOwnProperty(key)) {
+                            const value = params[key];
+                            formData.append(key, String(value));
+                        }
                     }
+                    
+                    // Log the exact data being sent for debugging
+                    console.log('Sending data:', formData.toString());
+                    
+                    // Make fetch request - no custom headers to avoid CORS issues
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                    
+                    const response = await fetch(currentUrl, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal
+                        // Important: No Content-Type header to avoid CORS preflight
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    // Check for HTTP errors
+                    if (!response.ok) {
+                        console.error(`HTTP error: ${response.status}`);
+                        throw new Error(`HTTP error: ${response.status}`);
+                    }
+                    
+                    // Parse response
+                    const result = await response.json();
+                    console.log('API Response for', action, ':', result);
+                    return result;
+                } catch (error) {
+                    console.error(`API Error (Attempt ${retries + 1}/${maxRetries + 1}):`, error);
+                    
+                    if (error.name === 'AbortError') {
+                        console.error('Request timed out. Retrying...');
+                    } else if (error.message.includes('Failed to fetch')) {
+                        console.error('Network error. Retrying...');
+                    }
+                    
+                    retries++;
+                    
+                    // Try backup URL on second attempt
+                    if (retries === 1 && !useBackupUrl) {
+                        useBackupUrl = true;
+                        console.log('Switching to backup API URL');
+                    }
+                    
+                    // If we've reached max retries, return error
+                    if (retries > maxRetries) {
+                        return { 
+                            success: false, 
+                            error: `After ${maxRetries + 1} attempts: ${error.message}`
+                        };
+                    }
+                    
+                    // Add exponential backoff between retries
+                    const backoffTime = Math.min(1000 * Math.pow(2, retries), 8000);
+                    console.log(`Retrying in ${backoffTime}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, backoffTime));
                 }
-                
-                // Log the exact data being sent for debugging
-                console.log('Sending data:', formData.toString());
-                
-                // Make fetch request - no custom headers to avoid CORS issues
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: formData
-                    // Important: No Content-Type header to avoid CORS preflight
-                });
-                
-                // Check for HTTP errors
-                if (!response.ok) {
-                    console.error(`HTTP error: ${response.status}`);
-                    throw new Error(`HTTP error: ${response.status}`);
-                }
-                
-                // Parse response
-                const result = await response.json();
-                console.log('API Response for', action, ':', result);
-                return result;
-            } catch (error) {
-                console.error('API Error:', error);
-                return { 
-                    success: false, 
-                    error: error.message
-                };
             }
         }
         
@@ -983,6 +1100,24 @@
                 
                 if (result.success) {
                     allStudents = result.data || [];
+                    // Load class data to get class names
+                    const classesResult = await callApi('getKelas');
+                    if (classesResult.success) {
+                        // Create a mapping of class IDs to class names
+                        const classMap = {};
+                        classesResult.data.forEach(kelas => {
+                            classMap[kelas.id] = kelas.nama_kelas || kelas.nama || 'Kelas ' + kelas.id;
+                        });
+                        
+                        // Add class name to each student
+                        allStudents.forEach(student => {
+                            if (student.kelas_id && classMap[student.kelas_id]) {
+                                student.kelas_nama = classMap[student.kelas_id];
+                            } else {
+                                student.kelas_nama = 'Tanpa Kelas';
+                            }
+                        });
+                    }
                     populateStudentDropdowns();
                 } else {
                     console.error('Failed to load students:', result.error);
@@ -1006,7 +1141,7 @@
             
             // Generate options HTML
             const optionsHtml = sortedStudents.map(student => 
-                `<option value="${student.id}">${student.nama} (${student.kelas_id || 'Tanpa Kelas'})</option>`
+                `<option value="${student.id}">${student.nama} (${student.kelas_nama || 'Tanpa Kelas'})</option>`
             ).join('');
             
             // Set options to all student dropdowns
@@ -1055,11 +1190,11 @@
             
             if (!xpList || xpList.length === 0) {
                 xpListContainer.innerHTML = `
-                    <div class="text-center py-6">
-                        <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="shadcn-empty-state">
+                        <svg class="shadcn-empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <p class="mt-3 text-gray-500">Belum ada data XP. Tambahkan poin XP baru!</p>
+                        <p class="shadcn-empty-text">Belum ada data XP. Tambahkan poin XP baru!</p>
                     </div>
                 `;
                 return;
@@ -1071,19 +1206,19 @@
             });
             
             let html = `
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
-                        <thead>
-                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">Siswa</th>
-                                <th class="py-3 px-6 text-center">Jumlah XP</th>
-                                <th class="py-3 px-6 text-center">Level</th>
-                                <th class="py-3 px-6 text-left">Aktivitas</th>
-                                <th class="py-3 px-6 text-center">Tanggal</th>
-                                <th class="py-3 px-6 text-center">Aksi</th>
+                <div class="shadcn-table-container">
+                    <table class="shadcn-table">
+                        <thead class="shadcn-table-header">
+                            <tr>
+                                <th>Siswa</th>
+                                <th class="text-center">Jumlah XP</th>
+                                <th class="text-center">Level</th>
+                                <th>Aktivitas</th>
+                                <th class="text-center">Tanggal</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-600 text-sm">
+                        <tbody>
             `;
             
             sortedXP.forEach(xp => {
@@ -1092,26 +1227,24 @@
                 const levelClass = getLevelClass(xp.level);
                 
                 html += `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="py-3 px-6 text-left">${studentName}</td>
-                        <td class="py-3 px-6 text-center font-medium">${xp.jumlah_xp}</td>
-                        <td class="py-3 px-6 text-center">
+                    <tr>
+                        <td class="font-medium">${studentName}</td>
+                        <td class="text-center font-medium">${xp.jumlah_xp}</td>
+                        <td class="text-center">
                             <div class="flex justify-center">
                                 <span class="level-badge ${levelClass}">${xp.level || 1}</span>
                             </div>
                         </td>
-                        <td class="py-3 px-6 text-left">${xp.aktivitas}</td>
-                        <td class="py-3 px-6 text-center">${formatDateDisplay(xp.tanggal)}</td>
-                        <td class="py-3 px-6 text-center">
-                            <div class="flex item-center justify-center">
-                                <button class="view-xp-btn transform hover:text-blue-500 hover:scale-110 transition-all" 
-                                    data-id="${xp.id}" onclick="viewXp('${xp.id}')">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                </button>
-                            </div>
+                        <td>${xp.aktivitas}</td>
+                        <td class="text-center">${formatDateDisplay(xp.tanggal)}</td>
+                        <td class="text-center">
+                            <button class="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors" 
+                                data-id="${xp.id}" onclick="viewXp('${xp.id}')">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -1161,36 +1294,36 @@
             
             if (studentSummaries.length === 0) {
                 xpSummaryContainer.innerHTML = `
-                    <div class="text-center py-6">
-                        <p class="text-gray-500">Belum ada data XP yang tersedia.</p>
+                    <div class="shadcn-empty-state">
+                        <p class="shadcn-empty-text">Belum ada data XP yang tersedia.</p>
                     </div>
                 `;
                 return;
             }
             
             let html = `
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
-                        <thead>
-                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">Peringkat</th>
-                                <th class="py-3 px-6 text-left">Siswa</th>
-                                <th class="py-3 px-6 text-center">Total XP</th>
-                                <th class="py-3 px-6 text-center">Level</th>
+                <div class="shadcn-table-container">
+                    <table class="shadcn-table">
+                        <thead class="shadcn-table-header">
+                            <tr>
+                                <th>Peringkat</th>
+                                <th>Siswa</th>
+                                <th class="text-center">Total XP</th>
+                                <th class="text-center">Level</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-600 text-sm">
+                        <tbody>
             `;
             
             studentSummaries.forEach((summary, index) => {
                 const levelClass = getLevelClass(summary.level);
                 
                 html += `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="py-3 px-6 text-left font-medium">${index + 1}</td>
-                        <td class="py-3 px-6 text-left">${summary.name}</td>
-                        <td class="py-3 px-6 text-center font-medium">${summary.totalXp}</td>
-                        <td class="py-3 px-6 text-center">
+                    <tr>
+                        <td class="font-medium">${index + 1}</td>
+                        <td>${summary.name}</td>
+                        <td class="text-center font-medium">${summary.totalXp}</td>
+                        <td class="text-center">
                             <div class="flex justify-center">
                                 <span class="level-badge ${levelClass}">${summary.level}</span>
                             </div>
@@ -1319,6 +1452,24 @@
             document.getElementById('delete-xp-modal').classList.add('hidden');
         }
         
+        // Helper function to set loading state on buttons
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
+            }
+        }
+        
         // Handle XP form submission
         async function handleXpFormSubmit(e) {
             e.preventDefault();
@@ -1352,8 +1503,7 @@
             
             try {
                 // Disable save button and show loading state
-                saveButton.disabled = true;
-                saveButton.classList.add('loading');
+                setButtonLoading(saveButton, true);
                 
                 // Determine if this is an update or a new XP
                 const action = id ? 'updateGamifikasiXP' : 'createGamifikasiXP';
@@ -1383,8 +1533,7 @@
                 showToast('error', `Terjadi kesalahan saat ${id ? 'memperbarui' : 'menambahkan'} poin XP: ${error.message}`);
             } finally {
                 // Re-enable save button and hide loading state
-                saveButton.disabled = false;
-                saveButton.classList.remove('loading');
+                setButtonLoading(saveButton, false);
             }
         }
         
@@ -1399,8 +1548,7 @@
             
             try {
                 // Disable delete button and show loading state
-                deleteButton.disabled = true;
-                deleteButton.classList.add('loading');
+                setButtonLoading(deleteButton, true);
                 
                 // Call API to delete XP
                 const result = await callApi('deleteGamifikasiXP', { id: currentXpId });
@@ -1425,8 +1573,7 @@
                 showToast('error', `Terjadi kesalahan saat menghapus poin XP: ${error.message}`);
             } finally {
                 // Re-enable delete button and hide loading state
-                deleteButton.disabled = false;
-                deleteButton.classList.remove('loading');
+                setButtonLoading(deleteButton, false);
             }
         }
 
@@ -1442,6 +1589,7 @@
                 
                 if (result.success) {
                     allBadges = result.data || [];
+                    console.log('Loaded badges:', allBadges);
                     renderBadgesList(allBadges);
                     populateBadgeDropdowns();
                 } else {
@@ -1482,11 +1630,11 @@
             
             if (!badges || badges.length === 0) {
                 badgesListContainer.innerHTML = `
-                    <div class="text-center py-6">
-                        <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="shadcn-empty-state">
+                        <svg class="shadcn-empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <p class="mt-3 text-gray-500">Belum ada badge. Tambahkan badge baru!</p>
+                        <p class="shadcn-empty-text">Belum ada badge. Tambahkan badge baru!</p>
                     </div>
                 `;
                 return;
@@ -1496,19 +1644,19 @@
             
             badges.forEach(badge => {
                 html += `
-                    <div class="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer" onclick="viewBadge('${badge.id}')">
+                    <div class="bg-background rounded-lg overflow-hidden border border-border shadow-sm hover:shadow transition-shadow duration-200 cursor-pointer" onclick="viewBadge('${badge.id}')">
                         <div class="p-4 flex items-center justify-center">
                             <img src="${badge.icon_url || 'https://via.placeholder.com/64?text=Badge'}" alt="${badge.nama_badge}" 
                                 class="badge-icon" onerror="this.src='https://via.placeholder.com/64?text=Error'">
                         </div>
-                        <div class="p-4 border-t">
+                        <div class="p-4 border-t border-border">
                             <h4 class="font-semibold text-center">${badge.nama_badge}</h4>
                             <div class="mt-2 text-center">
-                                <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                                <span class="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">
                                     <span class="font-semibold">${badge.xp_reward}</span> XP
                                 </span>
                             </div>
-                            <p class="mt-3 text-sm text-gray-600 line-clamp-2">${badge.deskripsi}</p>
+                            <p class="mt-3 text-xs text-muted-foreground line-clamp-2">${badge.deskripsi}</p>
                         </div>
                     </div>
                 `;
@@ -1644,8 +1792,7 @@
             
             try {
                 // Disable save button and show loading state
-                saveButton.disabled = true;
-                saveButton.classList.add('loading');
+                setButtonLoading(saveButton, true);
                 
                 // Determine if this is an update or a new badge
                 const action = id ? 'updateGamifikasiBadge' : 'createGamifikasiBadge';
@@ -1675,8 +1822,7 @@
                 showToast('error', `Terjadi kesalahan saat ${id ? 'memperbarui' : 'menambahkan'} badge: ${error.message}`);
             } finally {
                 // Re-enable save button and hide loading state
-                saveButton.disabled = false;
-                saveButton.classList.remove('loading');
+                setButtonLoading(saveButton, false);
             }
         }
         
@@ -1691,8 +1837,7 @@
             
             try {
                 // Disable delete button and show loading state
-                deleteButton.disabled = true;
-                deleteButton.classList.add('loading');
+                setButtonLoading(deleteButton, true);
                 
                 // Call API to delete badge
                 const result = await callApi('deleteGamifikasiBadge', { id: currentBadgeId });
@@ -1717,8 +1862,7 @@
                 showToast('error', `Terjadi kesalahan saat menghapus badge: ${error.message}`);
             } finally {
                 // Re-enable delete button and hide loading state
-                deleteButton.disabled = false;
-                deleteButton.classList.remove('loading');
+                setButtonLoading(deleteButton, false);
             }
         }
 
@@ -1756,11 +1900,11 @@
             
             if (!studentBadges || studentBadges.length === 0) {
                 studentBadgesListContainer.innerHTML = `
-                    <div class="text-center py-6">
-                        <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="shadcn-empty-state">
+                        <svg class="shadcn-empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <p class="mt-3 text-gray-500">Belum ada badge yang diberikan kepada siswa. Berikan badge kepada siswa!</p>
+                        <p class="shadcn-empty-text">Belum ada badge yang diberikan kepada siswa. Berikan badge kepada siswa!</p>
                     </div>
                 `;
                 return;
@@ -1801,15 +1945,15 @@
                     if (!badge) return;
                     
                     html += `
-                        <div class="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer" 
+                        <div class="bg-background rounded-lg overflow-hidden border border-border shadow-sm hover:shadow transition-shadow duration-200 cursor-pointer" 
                             onclick="viewStudentBadge('${studentBadge.id}')">
                             <div class="p-3 flex items-center justify-center">
                                 <img src="${badge.icon_url || 'https://via.placeholder.com/64?text=Badge'}" alt="${badge.nama_badge}" 
                                     class="badge-icon h-12 w-12" onerror="this.src='https://via.placeholder.com/64?text=Error'">
                             </div>
-                            <div class="p-3 border-t">
+                            <div class="p-3 border-t border-border">
                                 <h5 class="font-semibold text-center">${badge.nama_badge}</h5>
-                                <p class="text-xs text-gray-500 text-center mt-1">
+                                <p class="text-xs text-muted-foreground text-center mt-1">
                                     ${formatDateDisplay(studentBadge.tanggal_perolehan)}
                                 </p>
                             </div>
@@ -1944,8 +2088,7 @@
             
             try {
                 // Disable save button and show loading state
-                saveButton.disabled = true;
-                saveButton.classList.add('loading');
+                setButtonLoading(saveButton, true);
                 
                 // Get the badge to determine XP reward
                 const badge = allBadges.find(b => b.id === badge_id);
@@ -2000,8 +2143,7 @@
                 showToast('error', `Terjadi kesalahan saat ${id ? 'memperbarui' : 'memberikan'} badge siswa: ${error.message}`);
             } finally {
                 // Re-enable save button and hide loading state
-                saveButton.disabled = false;
-                saveButton.classList.remove('loading');
+                setButtonLoading(saveButton, false);
             }
         }
         
@@ -2016,8 +2158,7 @@
             
             try {
                 // Disable delete button and show loading state
-                deleteButton.disabled = true;
-                deleteButton.classList.add('loading');
+                setButtonLoading(deleteButton, true);
                 
                 // Call API to delete student badge
                 const result = await callApi('deleteSiswaBadge', { id: currentStudentBadgeId });
@@ -2042,15 +2183,8 @@
                 showToast('error', `Terjadi kesalahan saat menghapus badge siswa: ${error.message}`);
             } finally {
                 // Re-enable delete button and hide loading state
-                deleteButton.disabled = false;
-                deleteButton.classList.remove('loading');
+                setButtonLoading(deleteButton, false);
             }
-        }
-        
-        // Define missing functions to avoid errors before their sections are added
-        function loadBadges() {
-            console.log('loadBadges will be implemented');
-            return Promise.resolve();
         }
         
         // Initialize the viewXp function globally since it's called from inline event handlers

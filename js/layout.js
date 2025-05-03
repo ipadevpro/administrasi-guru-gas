@@ -2,7 +2,7 @@
 
 // Check authentication status
 function checkAuth() {
-    const userData = localStorage.getItem('eduadmin_user');
+    const userData = localStorage.getItem('kelasguru_user');
     if (!userData) {
         window.location.href = 'login.html';
         return null;
@@ -11,7 +11,7 @@ function checkAuth() {
     try {
         return JSON.parse(userData);
     } catch (e) {
-        localStorage.removeItem('eduadmin_user');
+        localStorage.removeItem('kelasguru_user');
         window.location.href = 'login.html';
         return null;
     }
@@ -45,12 +45,16 @@ function initLayout() {
 // Create sidebar HTML
 function createSidebar() {
     return `
-    <div class="sidebar bg-card h-full shadow-sm flex flex-col">
+    <div class="sidebar bg-card h-full shadow-sm flex flex-col" style="background-color: #ffffff;">
         <div class="p-5 border-b flex items-center">
-            <svg class="w-6 h-6 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"></path>
+            <svg class="w-8 h-8 text-primary mr-2" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M256 56L56 162.5V184L256 290.5L456 184V162.5L256 56Z" fill="currentColor"/>
+                <path d="M456 208L413 228V310C390.5 344.5 351 376 256 376C161 376 121.5 344.5 99 310V228L56 208V336C87.5 390.5 158 456 256 456C354 456 424.5 390.5 456 336V208Z" fill="currentColor"/>
+                <path d="M368 242V306.5L396 282V223L368 242Z" fill="currentColor"/>
+                <path d="M169 232L151 228.5L143 252L160 250L169 232Z" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M169 232L225 245L296 240.5L340 212" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            <h1 class="text-lg font-medium">EduAdmin</h1>
+            <h1 class="text-lg font-medium">KelasGuru</h1>
         </div>
         <nav class="flex-1 p-3">
             <ul class="space-y-1.5">
@@ -205,7 +209,16 @@ function setupLayoutEventListeners() {
                 
                 // When sidebar is shown on mobile, make it fixed position over the content
                 if (!sidebar.classList.contains('hidden')) {
-                    sidebar.classList.add('fixed', 'z-50', 'h-screen', 'left-0', 'top-0');
+                    sidebar.classList.add('fixed', 'z-50', 'h-screen', 'left-0', 'top-0', 'shadow-lg');
+                    sidebar.style.backgroundColor = '#ffffff';
+                    sidebar.style.width = '16rem'; // 64px = 16rem
+                    
+                    // Also apply background color to the inner sidebar div for proper rendering
+                    const innerSidebar = sidebar.querySelector('.sidebar');
+                    if (innerSidebar) {
+                        innerSidebar.style.backgroundColor = '#ffffff';
+                        innerSidebar.classList.add('h-full');
+                    }
                     
                     // Add a close button to the sidebar
                     if (!document.getElementById('sidebar-close')) {
@@ -219,7 +232,16 @@ function setupLayoutEventListeners() {
                         `;
                         closeBtn.addEventListener('click', function() {
                             sidebar.classList.add('hidden');
-                            sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0');
+                            sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0', 'bg-card', 'shadow-lg');
+                            sidebar.style.backgroundColor = '';
+                            sidebar.style.width = '';
+                            
+                            // Reset inner sidebar styles too
+                            const innerSidebar = sidebar.querySelector('.sidebar');
+                            if (innerSidebar) {
+                                innerSidebar.style.backgroundColor = '';
+                            }
+                            
                             this.remove();
                             document.getElementById('sidebar-overlay')?.remove();
                         });
@@ -233,7 +255,16 @@ function setupLayoutEventListeners() {
                         overlay.className = 'fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden';
                         overlay.addEventListener('click', function() {
                             sidebar.classList.add('hidden');
-                            sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0');
+                            sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0', 'bg-card', 'shadow-lg');
+                            sidebar.style.backgroundColor = '';
+                            sidebar.style.width = '';
+                            
+                            // Reset inner sidebar styles too
+                            const innerSidebar = sidebar.querySelector('.sidebar');
+                            if (innerSidebar) {
+                                innerSidebar.style.backgroundColor = '';
+                            }
+                            
                             this.remove();
                             document.getElementById('sidebar-close')?.remove();
                         });
@@ -241,7 +272,16 @@ function setupLayoutEventListeners() {
                     }
                 } else {
                     // Remove the fixed position when hidden
-                    sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0');
+                    sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0', 'bg-card', 'shadow-lg');
+                    sidebar.style.backgroundColor = '';
+                    sidebar.style.width = '';
+                    
+                    // Reset inner sidebar styles too
+                    const innerSidebar = sidebar.querySelector('.sidebar');
+                    if (innerSidebar) {
+                        innerSidebar.style.backgroundColor = '';
+                    }
+                    
                     document.getElementById('sidebar-overlay')?.remove();
                     document.getElementById('sidebar-close')?.remove();
                 }
@@ -254,7 +294,16 @@ function setupLayoutEventListeners() {
         const sidebar = document.getElementById('sidebar-container');
         if (sidebar) {
             if (window.innerWidth >= 768) { // md breakpoint
-                sidebar.classList.remove('fixed', 'z-50', 'left-0', 'top-0');
+                sidebar.classList.remove('fixed', 'z-50', 'h-screen', 'left-0', 'top-0', 'bg-card', 'shadow-lg');
+                sidebar.style.backgroundColor = '';
+                sidebar.style.width = '';
+                
+                // Reset inner sidebar styles too
+                const innerSidebar = sidebar.querySelector('.sidebar');
+                if (innerSidebar) {
+                    innerSidebar.style.backgroundColor = '';
+                }
+                
                 document.getElementById('sidebar-overlay')?.remove();
                 document.getElementById('sidebar-close')?.remove();
                 
@@ -307,7 +356,7 @@ function setupLayoutEventListeners() {
 
 // Logout function
 function logout() {
-    localStorage.removeItem('eduadmin_user');
+    localStorage.removeItem('kelasguru_user');
     window.location.href = 'login.html';
 }
 

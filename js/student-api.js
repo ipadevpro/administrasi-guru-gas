@@ -1,5 +1,5 @@
 // API functions for Students page
-const API_URL = 'https://script.google.com/macros/s/AKfycbyp_W_kaU71Lw-U1LsT4omiUCoMkQ1pC-Gk-c75wdkWgngM2KnISaeP5pPGSwOAC-ejPA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxZVwdUIupr3e3ljw-lVaZMeNuEk7rV9GOYFxshyUaJKmi3TKCsGL6B5EaLSNeJtsmIzg/exec';
 
 // Direct API call function
 async function callApi(action, params = {}) {
@@ -71,4 +71,33 @@ async function getKelas(id) {
     const params = {};
     if (id) params.id = id;
     return callApi('getKelas', params);
+}
+
+// Function to fetch class options for dropdowns
+async function fetchClassOptions() {
+    try {
+        // Get all classes from API
+        const response = await getKelas();
+        
+        if (response.success && Array.isArray(response.data)) {
+            // Return the classes data
+            return response.data;
+        } else {
+            console.error('Error fetching classes:', response.error || 'Unknown error');
+            return [];
+        }
+    } catch (error) {
+        console.error('Exception fetching classes:', error);
+        return [];
+    }
+}
+
+// Paginated student data retrieval
+async function getPaginatedSiswa(page = 1, pageSize = 20, filters = {}) {
+    return callApi('getSiswa', { 
+        page, 
+        pageSize, 
+        ...filters,
+        paginated: true
+    });
 } 

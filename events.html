@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acara & Kegiatan - Admin Guru</title>
+    <title>Acara & Kegiatan - KelasGuru</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDU2TDU2IDE2Mi41VjE4NEwyNTYgMjkwLjVMNDU2IDE4NFYxNjIuNUwyNTYgNTZaIiBmaWxsPSIjMzY4NWZmIi8+PHBhdGggZD0iTTQ1NiAyMDhMNDEzIDIyOFYzMTBDMzkwLjUgMzQ0LjUgMzUxIDM3NiAyNTYgMzc2QzE2MSAzNzYgMTIxLjUgMzQ0LjUgOTkgMzEwVjIyOEw1NiAyMDhWMzM2Qzg3LjUgMzkwLjUgMTU4IDQ1NiAyNTYgNDU2QzM1NCA0NTYgNDI0LjUgMzkwLjUgNDU2IDMzNlYyMDhaIiBmaWxsPSIjMzY4NWZmIi8+PHBhdGggZD0iTTM2OCAyNDJWMzA2LjVMMzk2IDI4MlYyMjNMMzY4IDI0MloiIGZpbGw9IiMzNjg1ZmYiLz48cGF0aCBkPSJNMTY5IDIzMkwxNTEgMjI4LjVMMTQzIDI1MkwxNjAgMjUwTDE2OSAyMzJaIiBzdHJva2U9IiMzNjg1ZmYiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE2OSAyMzJMMjI1IDI0NUwyOTYgMjQwLjVMMzQwIDIxMiIgc3Ryb2tlPSIjMzY4NWZmIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
     <link rel="stylesheet" href="toast.css">
@@ -204,15 +205,15 @@
                 
                 <!-- Calendar/Events container -->
                 <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
-                    <div class="p-4 bg-blue-500 text-white flex justify-between items-center">
+                    <div class="p-4 bg-primary text-primary-foreground flex justify-between items-center">
                         <h3 class="text-lg font-semibold" id="calendar-title">Kalender Acara</h3>
                         <div class="flex space-x-2">
-                            <button id="prev-month-btn" class="text-white hover:bg-blue-600 p-1 rounded">
+                            <button id="prev-month-btn" class="text-primary-foreground hover:bg-primary/80 p-1 rounded">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                 </svg>
                             </button>
-                            <button id="next-month-btn" class="text-white hover:bg-blue-600 p-1 rounded">
+                            <button id="next-month-btn" class="text-primary-foreground hover:bg-primary/80 p-1 rounded">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
@@ -244,7 +245,7 @@
                 
                 <!-- Event List -->
                 <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                    <div class="p-4 bg-blue-500 text-white">
+                    <div class="p-4 bg-primary text-primary-foreground">
                         <h3 class="text-lg font-semibold">Daftar Acara</h3>
                     </div>
                     <div class="p-4">
@@ -1132,12 +1133,9 @@
             }
             
             const saveButton = document.getElementById('save-event-btn');
+            setButtonLoading(saveButton, true);
             
             try {
-                // Disable save button and show loading state
-                saveButton.disabled = true;
-                saveButton.classList.add('loading');
-                
                 // Determine if this is an update or a new event
                 const action = id ? 'updateEvent' : 'createEvent';
                 
@@ -1175,9 +1173,7 @@
                 console.error('Error saving event:', error);
                 showToast('error', `Terjadi kesalahan saat ${id ? 'memperbarui' : 'menambahkan'} acara: ${error.message}`);
             } finally {
-                // Re-enable save button and hide loading state
-                saveButton.disabled = false;
-                saveButton.classList.remove('loading');
+                setButtonLoading(saveButton, false);
             }
         }
         
@@ -1202,12 +1198,9 @@
             }
             
             const deleteButton = document.getElementById('confirm-delete-btn');
+            setButtonLoading(deleteButton, true);
             
             try {
-                // Disable delete button and show loading state
-                deleteButton.disabled = true;
-                deleteButton.classList.add('loading');
-                
                 console.log('Calling deleteEvent API with ID:', eventId);
                 
                 // Call API to delete event
@@ -1239,23 +1232,25 @@
                 console.error('Error deleting event:', error);
                 showToast('error', `Terjadi kesalahan saat menghapus acara: ${error.message}`);
             } finally {
-                // Re-enable delete button and hide loading state
-                deleteButton.disabled = false;
-                deleteButton.classList.remove('loading');
+                setButtonLoading(deleteButton, false);
             }
         }
         
-        // Toggle loading state on buttons
-        function toggleButtonLoading(button, isLoading) {
+        // Helper function to set loading state on buttons
+        function setButtonLoading(button, isLoading) {
             if (isLoading) {
-                button.disabled = true;
                 button.classList.add('loading');
-                button.setAttribute('data-original-text', button.textContent);
-                button.textContent = 'Loading...';
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
             } else {
-                button.disabled = false;
                 button.classList.remove('loading');
-                button.textContent = button.getAttribute('data-original-text') || 'Submit';
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
             }
         }
     </script>

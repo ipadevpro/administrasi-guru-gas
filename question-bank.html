@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Soal - Admin Guru</title>
+    <title>Bank Soal - KelasGuru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
     <link rel="stylesheet" href="toast.css">
@@ -165,7 +165,7 @@
                 
                 <!-- Questions List -->
                 <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                    <div class="p-4 bg-blue-500 text-white">
+                    <div class="p-4 bg-primary text-primary-foreground">
                         <h3 class="text-lg font-semibold">Daftar Soal</h3>
                     </div>
                     <div class="p-4">
@@ -491,6 +491,24 @@
             document.getElementById('close-delete-modal-btn').addEventListener('click', hideDeleteModal);
             document.getElementById('cancel-delete-btn').addEventListener('click', hideDeleteModal);
             document.getElementById('confirm-delete-btn').addEventListener('click', handleDeleteQuestion);
+        }
+        
+        // Toggle loading state on buttons
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('loading');
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
+            } else {
+                button.classList.remove('loading');
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
+            }
         }
         
         // API call function following CORS rules
@@ -895,8 +913,7 @@
             
             try {
                 // Disable save button and show loading state
-                saveButton.disabled = true;
-                saveButton.classList.add('loading');
+                setButtonLoading(saveButton, true);
                 
                 // Determine if this is an update or a new question
                 const action = id ? 'updateBankSoal' : 'createBankSoal';
@@ -926,8 +943,7 @@
                 showToast('error', `Terjadi kesalahan saat ${id ? 'memperbarui' : 'menambahkan'} soal: ${error.message}`);
             } finally {
                 // Re-enable save button and hide loading state
-                saveButton.disabled = false;
-                saveButton.classList.remove('loading');
+                setButtonLoading(saveButton, false);
             }
         }
         
@@ -955,8 +971,7 @@
             
             try {
                 // Disable delete button and show loading state
-                deleteButton.disabled = true;
-                deleteButton.classList.add('loading');
+                setButtonLoading(deleteButton, true);
                 
                 console.log('Calling deleteBankSoal API with ID:', questionId);
                 
@@ -988,8 +1003,7 @@
                 showToast('error', `Terjadi kesalahan saat menghapus soal: ${error.message}`);
             } finally {
                 // Re-enable delete button and hide loading state
-                deleteButton.disabled = false;
-                deleteButton.classList.remove('loading');
+                setButtonLoading(deleteButton, false);
             }
         }
     </script>

@@ -68,6 +68,65 @@
                 transform: rotate(1turn);
             }
         }
+        
+        /* Button animations */
+        .shadcn-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .shadcn-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .shadcn-btn:active {
+            transform: translateY(0);
+        }
+        
+        .shadcn-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .shadcn-btn:focus::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0) translate(-50%, -50%);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20) translate(-50%, -50%);
+                opacity: 0;
+            }
+        }
+        
+        /* Edit and Delete button animations */
+        .edit-btn, .delete-btn {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .edit-btn:hover, .delete-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .edit-btn:active, .delete-btn:active {
+            transform: translateY(1px);
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -123,6 +182,9 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Pagination container -->
+                    <div id="pagination-container" class="mt-2"></div>
                 </div>
             </div>
         </div>
@@ -175,7 +237,7 @@
                     <button type="button" id="cancel-btn" class="shadcn-btn shadcn-btn-outline mr-2">
                         Batal
                     </button>
-                    <button type="submit" class="shadcn-btn shadcn-btn-primary">
+                    <button type="submit" id="save-btn" class="shadcn-btn shadcn-btn-primary">
                         Simpan
                     </button>
                 </div>
@@ -215,6 +277,7 @@
     <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/layout.js"></script>
+    <script src="js/pagination.js"></script>
     <script src="js/sidebar-fix.js"></script>
     <script src="toast.js"></script>
     <script>
@@ -222,6 +285,16 @@
             // Initialize layout
             initLayout();
             updatePageTitle('Kelas');
+            
+            // Initialize pagination
+            const pagination = new Pagination({
+                containerId: 'pagination-container',
+                initialPage: 1,
+                pageSize: 10,
+                onPageChange: (page) => {
+                    loadClasses(page);
+                }
+            });
             
             // Load classes data
             loadClasses();
@@ -237,488 +310,288 @@
             document.getElementById('cancel-delete-btn').addEventListener('click', hideDeleteModal);
             document.getElementById('confirm-delete-btn').addEventListener('click', deleteClass);
             
-            // Search functionality
-            document.getElementById('search-input').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                filterClasses(searchTerm);
+            // Search functionality with debounce
+            const searchInput = document.getElementById('search-input');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadClasses(1, this.value);
+                }, 300); // Wait 300ms after user stops typing
             });
+            
+            // Lazy load functions
+            async function loadClasses(page = 1, searchTerm = '') {
+                const classesTableBody = document.getElementById('classes-table-body');
+                classesTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center">
+                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                            <p class="mt-2 text-gray-500">Memuat data kelas...</p>
+                        </td>
+                    </tr>
+                `;
+                
+                try {
+                    pagination.setLoading(true);
+                    
+                    // Get classes with pagination
+                    const filters = {};
+                    if (searchTerm) {
+                        filters.search = searchTerm;
+                    }
+                    
+                    const response = await getPaginatedKelas(page, pagination.pageSize, filters);
+                    
+                    if (response.success) {
+                        classes = response.data;
+                        
+                        // Update pagination - safely check if pagination data exists
+                        if (response.pagination && response.pagination.totalItems !== undefined) {
+                            pagination.setTotalItems(response.pagination.totalItems);
+                        } else {
+                            // Fallback - set total items to the length of the current data
+                            pagination.setTotalItems(classes.length);
+                            console.warn('Pagination data not provided by API, using fallback counting method');
+                        }
+                        
+                        // Get student counts for each class
+                        const studentCountPromises = classes.map(kelas => getSiswa(null, kelas.id));
+                        const studentCountResponses = await Promise.all(studentCountPromises);
+                        
+                        // Create a map of class ID -> student count
+                        studentCounts = {};
+                        studentCountResponses.forEach((response, index) => {
+                            if (response.success) {
+                                const classId = classes[index].id;
+                                studentCounts[classId] = response.data ? response.data.length : 0;
+                            }
+                        });
+                        
+                        // Render classes table
+                        renderClassesTable();
+                    } else {
+                        showToast('error', 'Gagal memuat data: ' + response.error);
+                        classesTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-red-500">
+                                    Error: ${response.error}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading classes:', error);
+                    showToast('error', 'Gagal memuat data: ' + error.message);
+                    classesTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-red-500">
+                                Error: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                } finally {
+                    pagination.setLoading(false);
+                }
+            }
+            
+            function renderClassesTable() {
+                const classesTableBody = document.getElementById('classes-table-body');
+                
+                if (classes.length === 0) {
+                    classesTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                Tidak ada data kelas.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                
+                classes.forEach(kelas => {
+                    html += `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-gray-900">${kelas.nama_kelas || kelas.nama || '-'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${kelas.tahun_ajaran || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${kelas.wali_kelas || '-'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${studentCounts[kelas.id] || 0} siswa
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button class="edit-btn text-blue-600 hover:text-blue-900 mr-3" data-id="${kelas.id}">
+                                    Edit
+                                </button>
+                                <button class="delete-btn text-red-600 hover:text-red-900" data-id="${kelas.id}" data-name="${kelas.nama_kelas || kelas.nama || 'Kelas'}">
+                                    Hapus
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                classesTableBody.innerHTML = html;
+                
+                // Attach event listeners to edit and delete buttons
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        showEditModal(id);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const name = this.getAttribute('data-name');
+                        showDeleteModal(id, name);
+                    });
+                });
+            }
+            
+            // Rest of the existing functions
+            function showAddModal() {
+                document.getElementById('modal-title').textContent = 'Tambah Kelas';
+                document.getElementById('class-id').value = '';
+                document.getElementById('nama').value = '';
+                document.getElementById('tahun-ajaran').value = '';
+                document.getElementById('wali-kelas').value = '';
+                document.getElementById('deskripsi').value = '';
+                
+                document.getElementById('class-modal').classList.remove('hidden');
+            }
+            
+            function showEditModal(id) {
+                const kelas = classes.find(k => k.id === id);
+                if (!kelas) return;
+                
+                document.getElementById('modal-title').textContent = 'Edit Kelas';
+                document.getElementById('class-id').value = kelas.id;
+                document.getElementById('nama').value = kelas.nama_kelas || kelas.nama || '';
+                document.getElementById('tahun-ajaran').value = kelas.tahun_ajaran || '';
+                document.getElementById('wali-kelas').value = kelas.wali_kelas || '';
+                document.getElementById('deskripsi').value = kelas.deskripsi || '';
+                
+                document.getElementById('class-modal').classList.remove('hidden');
+            }
+            
+            function hideModal() {
+                document.getElementById('class-modal').classList.add('hidden');
+            }
+            
+            function showDeleteModal(id, name) {
+                deleteClassId = id;
+                document.getElementById('delete-class-name').textContent = name;
+                document.getElementById('delete-modal').classList.remove('hidden');
+            }
+            
+            function hideDeleteModal() {
+                document.getElementById('delete-modal').classList.add('hidden');
+                deleteClassId = null;
+            }
+            
+            async function handleSubmit(e) {
+                e.preventDefault();
+                
+                const id = document.getElementById('class-id').value;
+                const isEdit = !!id;
+                
+                // Show loading state
+                const saveBtn = document.getElementById('save-btn');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⭮</span> Menyimpan...';
+                
+                const classData = {
+                    nama_kelas: document.getElementById('nama').value,
+                    tahun_ajaran: document.getElementById('tahun-ajaran').value,
+                    wali_kelas: document.getElementById('wali-kelas').value,
+                    deskripsi: document.getElementById('deskripsi').value
+                };
+                
+                try {
+                    let response;
+                    
+                    if (isEdit) {
+                        response = await updateKelas(id, classData);
+                    } else {
+                        response = await createKelas(classData);
+                    }
+                    
+                    if (response.success) {
+                        showToast('success', isEdit ? 'Kelas berhasil diperbarui' : 'Kelas berhasil ditambahkan');
+                        hideModal();
+                        
+                        // Reload classes with current state
+                        const currentPage = pagination.currentPage;
+                        const searchTerm = document.getElementById('search-input').value;
+                        loadClasses(currentPage, searchTerm);
+                    } else {
+                        showToast('error', 'Gagal: ' + response.error);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('error', 'Terjadi kesalahan: ' + error.message);
+                } finally {
+                    // Reset button state
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = 'Simpan';
+                }
+            }
+            
+            async function deleteClass() {
+                if (!deleteClassId) {
+                    hideDeleteModal();
+                    return;
+                }
+                
+                // Show loading state
+                const deleteBtn = document.getElementById('confirm-delete-btn');
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⭮</span> Menghapus...';
+                
+                try {
+                    const response = await deleteKelas(deleteClassId);
+                    
+                    if (response.success) {
+                        showToast('success', 'Kelas berhasil dihapus');
+                        
+                        // Reload classes with current state
+                        const currentPage = pagination.currentPage;
+                        // If we're deleting the last item on the page, go to previous page
+                        const newPage = (classes.length === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
+                        const searchTerm = document.getElementById('search-input').value;
+                        
+                        hideDeleteModal();
+                        loadClasses(newPage, searchTerm);
+                    } else {
+                        showToast('error', 'Gagal menghapus kelas: ' + response.error);
+                        hideDeleteModal();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('error', 'Terjadi kesalahan: ' + error.message);
+                    hideDeleteModal();
+                } finally {
+                    // Reset button state (even though modal is hidden)
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = 'Hapus';
+                }
+            }
         });
         
         // Global variables
         let classes = [];
         let studentCounts = {};
         let deleteClassId = null;
-        
-        // Load classes
-        async function loadClasses() {
-            try {
-                showLoading('classes-table-body');
-                
-                // Clear the cache to force fresh data
-                clearDataCache();
-                
-                // Change API_URL to direct variable if not defined
-                if (typeof API_URL === 'undefined') {
-                    window.API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
-                }
-                
-                console.log("Loading classes from API_URL:", API_URL);
-                
-                // Load both classes and students in parallel for better performance
-                const [classesResult, studentsResult] = await Promise.all([
-                    // Classes data - always fetch fresh
-                    (async () => {
-                        try {
-                            console.log('Trying direct API call for classes...');
-                            const formData = new URLSearchParams();
-                            formData.append('action', 'getKelas');
-                            
-                            const response = await fetch(API_URL, {
-                                method: 'POST',
-                                body: formData
-                            }).then(res => res.json());
-                            
-                            console.log('Classes direct API response:', response);
-                            
-                            if (response && response.success) {
-                                localStorage.setItem('admin_classes', JSON.stringify(response.data));
-                                localStorage.setItem('admin_classes_timestamp', Date.now().toString());
-                                return response;
-                            }
-                            
-                            throw new Error('Failed to load classes with direct method');
-                        } catch (error) {
-                            console.error('Error loading classes:', error);
-                            
-                            // Try fetching cached data as last resort
-                            const cachedClasses = localStorage.getItem('admin_classes');
-                            if (cachedClasses) {
-                                console.log('Using cached classes as fallback');
-                                return { success: true, data: JSON.parse(cachedClasses) };
-                            }
-                            
-                            return { success: false, error: error.message };
-                        }
-                    })(),
-                    
-                    // Students data for counting class sizes
-                    (async () => {
-                        try {
-                            console.log('Loading students for class counts...');
-                            const formData = new URLSearchParams();
-                            formData.append('action', 'getSiswa');
-                            
-                            return fetch(API_URL, {
-                                method: 'POST',
-                                body: formData
-                            }).then(res => res.json());
-                        } catch (error) {
-                            console.error('Error loading students:', error);
-                            return { success: false, error: error.message };
-                        }
-                    })()
-                ]);
-                
-                // Process results
-                if (classesResult && classesResult.success) {
-                    classes = classesResult.data || [];
-                    console.log('Loaded classes data:', classes);
-                    
-                    // Calculate student counts if student data is available
-                    if (studentsResult && studentsResult.success) {
-                        // Count students per class
-                        studentCounts = {};
-                        const students = studentsResult.data || [];
-                        students.forEach(student => {
-                            if (student.kelas_id) {
-                                studentCounts[student.kelas_id] = (studentCounts[student.kelas_id] || 0) + 1;
-                            } else if (student.kelas) {
-                                studentCounts[student.kelas] = (studentCounts[student.kelas] || 0) + 1;
-                            }
-                        });
-                        console.log('Student counts by class:', studentCounts);
-                    }
-                    
-                    renderClassesTable(classes);
-                } else {
-                    showError('classes-table-body', 'Gagal memuat data kelas. Silakan refresh halaman.');
-                }
-            } catch (error) {
-                console.error('Error loading classes:', error);
-                showError('classes-table-body', 'Terjadi kesalahan saat memuat data. Periksa konsol untuk detail.');
-            }
-        }
-        
-        // Add a method to clear cache if needed
-        function clearDataCache() {
-            localStorage.removeItem('admin_classes');
-            localStorage.setItem('admin_classes_timestamp', '');
-            console.log('Data cache cleared');
-        }
-        
-        // Helper functions for showing loading/error states
-        function showLoading(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                        <svg class="animate-spin h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Memuat data kelas...
-                    </td>
-                </tr>
-                `;
-            }
-        }
-        
-        function showError(elementId, message) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-red-500">
-                        <svg class="h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        ${message}
-                    </td>
-                </tr>
-                `;
-            }
-        }
-        
-        // Render classes table
-        function renderClassesTable(data) {
-            const tableBody = document.getElementById('classes-table-body');
-            
-            if (!data || data.length === 0) {
-                tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                        Belum ada data kelas
-                    </td>
-                </tr>
-                `;
-                return;
-            }
-            
-            console.log('Rendering classes:', data);
-            
-            let html = '';
-            data.forEach(kelas => {
-                // Handle different possible property names
-                const id = kelas.id || kelas.kelas_id || '';
-                const nama = kelas.nama || kelas.nama_kelas || '-';
-                const tahunAjaran = kelas.tahunAjaran || kelas.tahun_ajaran || '-';
-                const waliKelas = kelas.waliKelas || kelas.wali_kelas || '-';
-                const deskripsi = kelas.deskripsi || kelas.desc || '';
-                
-                console.log(`Rendering class: ${nama}, ID: ${id}, Year: ${tahunAjaran}`);
-                
-                html += `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">${nama}</div>
-                        ${deskripsi ? `<div class="text-sm text-gray-500">${deskripsi}</div>` : ''}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        ${tahunAjaran}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        ${waliKelas}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        ${studentCounts[id] || 0} siswa
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="text-blue-600 hover:text-blue-900 mr-3" onclick="showEditModal('${id}')">
-                            Edit
-                        </button>
-                        <button class="text-red-600 hover:text-red-900" onclick="showDeleteModal('${id}')">
-                            Hapus
-                        </button>
-                    </td>
-                </tr>
-                `;
-            });
-            
-            tableBody.innerHTML = html;
-        }
-        
-        // Filter classes based on search term
-        function filterClasses(searchTerm) {
-            if (!searchTerm) {
-                renderClassesTable(classes);
-                return;
-            }
-            
-            const filtered = classes.filter(kelas => {
-                return (
-                    (kelas.nama && kelas.nama.toLowerCase().includes(searchTerm)) ||
-                    (kelas.tahunAjaran && kelas.tahunAjaran.toLowerCase().includes(searchTerm)) ||
-                    (kelas.waliKelas && kelas.waliKelas.toLowerCase().includes(searchTerm)) ||
-                    (kelas.deskripsi && kelas.deskripsi.toLowerCase().includes(searchTerm))
-                );
-            });
-            
-            renderClassesTable(filtered);
-        }
-        
-        // Show modal for adding a new class
-        function showAddModal() {
-            document.getElementById('modal-title').textContent = 'Tambah Kelas';
-            document.getElementById('class-id').value = '';
-            document.getElementById('class-form').reset();
-            document.getElementById('class-modal').classList.remove('hidden');
-        }
-        
-        // Show modal for editing a class
-        function showEditModal(id) {
-            const kelas = classes.find(k => k.id === id || k.kelas_id === id);
-            if (!kelas) return;
-            
-            document.getElementById('modal-title').textContent = 'Edit Kelas';
-            document.getElementById('class-id').value = id;
-            document.getElementById('nama').value = kelas.nama || kelas.nama_kelas || '';
-            document.getElementById('tahun-ajaran').value = kelas.tahunAjaran || kelas.tahun_ajaran || '';
-            document.getElementById('wali-kelas').value = kelas.waliKelas || kelas.wali_kelas || '';
-            document.getElementById('deskripsi').value = kelas.deskripsi || kelas.desc || '';
-            
-            document.getElementById('class-modal').classList.remove('hidden');
-        }
-        
-        // Hide the modal
-        function hideModal() {
-            document.getElementById('class-modal').classList.add('hidden');
-        }
-        
-        // Show delete confirmation modal
-        function showDeleteModal(id) {
-            console.log('Showing delete modal for class ID:', id);
-            const kelas = classes.find(k => k.id === id || k.kelas_id === id);
-            if (!kelas) {
-                console.error('Class not found with ID:', id);
-                showToast('error', 'Kelas tidak ditemukan.');
-                return;
-            }
-            
-            console.log('Class found:', kelas);
-            deleteClassId = id;
-            document.getElementById('delete-class-name').textContent = kelas.nama || kelas.nama_kelas || '';
-            document.getElementById('delete-modal').classList.remove('hidden');
-        }
-        
-        // Hide delete confirmation modal
-        function hideDeleteModal() {
-            document.getElementById('delete-modal').classList.add('hidden');
-            deleteClassId = null;
-        }
-        
-        // Helper function to set loading state on buttons
-        function setButtonLoading(button, isLoading) {
-            if (isLoading) {
-                button.classList.add('loading');
-                button.disabled = true;
-                // Store original text
-                button.dataset.originalText = button.textContent;
-                button.textContent = 'Menyimpan...';
-            } else {
-                button.classList.remove('loading');
-                button.disabled = false;
-                // Restore original text
-                if (button.dataset.originalText) {
-                    button.textContent = button.dataset.originalText;
-                }
-            }
-        }
-        
-        // Handle form submission
-        async function handleSubmit(e) {
-            e.preventDefault();
-            
-            const submitButton = e.target.querySelector('button[type="submit"]');
-            setButtonLoading(submitButton, true);
-            
-            const id = document.getElementById('class-id').value;
-            const isEdit = !!id;
-            
-            try {
-                // Important: Make sure to match field names with the form elements
-                const kelasData = {
-                    nama: document.getElementById('nama').value,
-                    tahun_ajaran: document.getElementById('tahun-ajaran').value,
-                    wali_kelas: document.getElementById('wali-kelas').value,
-                    deskripsi: document.getElementById('deskripsi').value
-                };
-                
-                // Add alternate field names for compatibility
-                kelasData.nama_kelas = kelasData.nama;
-                kelasData.tahunAjaran = kelasData.tahun_ajaran;
-                kelasData.waliKelas = kelasData.wali_kelas;
-                kelasData.desc = kelasData.deskripsi;
-                
-                // For edit operations, include both ID field formats
-                if (isEdit) {
-                    kelasData.id = id;
-                    kelasData.kelas_id = id;
-                }
-                
-                console.log(`${isEdit ? 'Updating' : 'Creating'} class with data:`, kelasData);
-                
-                let response;
-                try {
-                    if (isEdit) {
-                        response = await updateKelas(id, kelasData);
-                    } else {
-                        response = await createKelas(kelasData);
-                    }
-                } catch (functionError) {
-                    console.warn('API function error:', functionError);
-                    
-                    // Fall back to direct API call
-                    const formData = new URLSearchParams();
-                    formData.append('action', isEdit ? 'updateKelas' : 'createKelas');
-                    if (isEdit) {
-                        formData.append('id', id);
-                        formData.append('kelas_id', id);
-                    }
-                    
-                    for (const key in kelasData) {
-                        formData.append(key, kelasData[key]);
-                    }
-                    
-                    console.log('Sending form data:', Object.fromEntries(formData));
-                    
-                    response = await fetch(API_URL, {
-                        method: 'POST',
-                        body: formData
-                    }).then(res => res.json());
-                    
-                    console.log('API response:', response);
-                }
-                
-                if (response && response.success) {
-                    hideModal();
-                    
-                    // If response has data, add it to the classes array immediately
-                    if (response.data) {
-                        if (isEdit) {
-                            // Update the class in the array
-                            const index = classes.findIndex(c => 
-                                c.id === id || c.kelas_id === id
-                            );
-                            
-                            if (index !== -1) {
-                                classes[index] = {
-                                    ...classes[index],
-                                    ...response.data,
-                                    id: response.data.id || response.data.kelas_id || id,
-                                    kelas_id: response.data.id || response.data.kelas_id || id
-                                };
-                            }
-                        } else {
-                            // When adding a new class, use the form data plus the new ID
-                            const newClassId = response.data.id || response.data.kelas_id;
-                            
-                            // Create a new class object with both form data and response data
-                            const newClass = {
-                                ...kelasData, // Include all the form data
-                                ...response.data, // Include any additional data from the response
-                                id: newClassId,
-                                kelas_id: newClassId,
-                                // Ensure we have all the fields needed by the table renderer
-                                nama: kelasData.nama,
-                                nama_kelas: kelasData.nama,
-                                tahun_ajaran: kelasData.tahun_ajaran,
-                                tahunAjaran: kelasData.tahun_ajaran,
-                                wali_kelas: kelasData.wali_kelas,
-                                waliKelas: kelasData.wali_kelas,
-                                deskripsi: kelasData.deskripsi,
-                                desc: kelasData.deskripsi
-                            };
-                            
-                            console.log('Adding new class to list:', newClass);
-                            classes.push(newClass);
-                        }
-                        
-                        // Update the table immediately
-                        renderClassesTable(classes);
-                    } else {
-                        // If no data in response, reload all classes
-                        await loadClasses();
-                    }
-                    
-                    showToast('success', `Kelas berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
-                } else {
-                    const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    showToast('error', `Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} kelas: ${errorMsg}`);
-                }
-            } catch (error) {
-                console.error('Error saving class:', error);
-                showToast('error', `Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} kelas. Periksa konsol untuk detail.`);
-            } finally {
-                setButtonLoading(submitButton, false);
-            }
-        }
-        
-        // Delete class
-        async function deleteClass() {
-            const confirmButton = document.getElementById('confirm-delete-btn');
-            setButtonLoading(confirmButton, true);
-            
-            console.log('Attempting to delete class with ID:', deleteClassId);
-            
-            if (!deleteClassId) {
-                alert('ID kelas tidak valid.');
-                console.error('Delete failed: deleteClassId is null or undefined');
-                setButtonLoading(confirmButton, false);
-                hideDeleteModal();
-                return;
-            }
-            
-            try {
-                console.log('Deleting class with ID:', deleteClassId);
-                let response;
-                try {
-                    response = await deleteKelas(deleteClassId);
-                } catch (functionError) {
-                    console.warn('API function error:', functionError);
-                    
-                    // Fall back to direct API call
-                    const formData = new URLSearchParams();
-                    formData.append('action', 'deleteKelas');
-                    formData.append('id', deleteClassId);
-                    
-                    console.log('Sending direct delete request with ID:', deleteClassId);
-                    response = await fetch(API_URL, {
-                        method: 'POST',
-                        body: formData
-                    }).then(res => res.json());
-                    
-                    console.log('Direct delete API response:', response);
-                }
-                
-                if (response && response.success) {
-                    hideDeleteModal();
-                    deleteClassId = null;
-                    await loadClasses();
-                    console.log('Class deleted successfully');
-                    showToast('success', 'Kelas berhasil dihapus.');
-                } else {
-                    const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    console.error('Delete API error:', errorMsg);
-                    showToast('error', `Gagal menghapus kelas: ${errorMsg}`);
-                }
-            } catch (error) {
-                console.error('Error deleting class:', error);
-                showToast('error', 'Terjadi kesalahan saat menghapus kelas: ' + error.message);
-            } finally {
-                setButtonLoading(confirmButton, false);
-            }
-        }
     </script>
 </body>
 </html> 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jurnal Pembelajaran - Admin Guru</title>
+    <title>Jurnal Pembelajaran - KelasGuru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
     <link rel="stylesheet" href="toast.css">
@@ -133,19 +133,14 @@
 
                 <!-- Journal Form -->
                 <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6 max-w-full">
-                    <div class="p-4 bg-blue-500 text-white">
+                    <div class="p-4 bg-primary text-primary-foreground">
                         <h3 class="text-lg font-semibold">Tambah Catatan Jurnal</h3>
                         <div id="edit-mode-indicator" class="text-sm mt-1 hidden">
                             Mode Edit Aktif - Anda sedang mengedit jurnal yang sudah ada
                         </div>
                     </div>
                     <div class="p-4">
-                        <!-- Debug Tools -->
-                        <div class="mb-4 p-2 bg-gray-100 rounded">
-                            <p class="text-sm mb-2 font-bold">Debug Tools:</p>
-                            <button type="button" id="debug-edit-btn" class="shadcn-btn shadcn-btn-sm shadcn-btn-secondary">Test Edit First Journal</button>
-                            <span class="ml-4 text-xs" id="debug-edit-info"></span>
-                        </div>
+
                         
                         <form id="journal-form" class="w-full">
                             <input type="hidden" id="journal-id">
@@ -240,7 +235,7 @@
                 
                 <!-- Journal List -->
                 <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                    <div class="p-4 bg-blue-500 text-white flex justify-between items-center">
+                    <div class="p-4 bg-primary text-primary-foreground flex justify-between items-center">
                         <h3 class="text-lg font-semibold">Catatan Jurnal</h3>
                         <button id="manual-reload-btn" class="shadcn-btn shadcn-btn-sm shadcn-btn-secondary">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,9 +252,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="journals-list">
                             <!-- Journal cards will be added here dynamically -->
                         </div>
-                        <div id="journal-debug" class="mt-4 p-3 bg-gray-100 rounded text-xs hidden">
-                            <strong>Debug Info:</strong> <span id="debug-text"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -328,7 +321,7 @@
         // Ensure API_URL is defined
         if (typeof API_URL === 'undefined') {
             console.warn('API_URL not defined, using default URL');
-            window.API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
+            window.API_URL = 'https://script.google.com/macros/s/AKfycbxZVwdUIupr3e3ljw-lVaZMeNuEk7rV9GOYFxshyUaJKmi3TKCsGL6B5EaLSNeJtsmIzg/exec';
         }
 
         // Modal references
@@ -355,27 +348,7 @@
             // Add manual reload button event listener
             document.getElementById('manual-reload-btn').addEventListener('click', () => {
                 console.log('Manual reload triggered');
-                loadJournals(true); // true indicates debug mode
-            });
-
-            // Add debug edit button listener
-            document.getElementById('debug-edit-btn').addEventListener('click', () => {
-                // Will find and edit the first journal in the list
-                console.log('Debug edit button clicked');
-                
-                if (allJournals && allJournals.length > 0) {
-                    const firstJournal = allJournals[0];
-                    const journalId = firstJournal.id || firstJournal._id;
-                    
-                    document.getElementById('debug-edit-info').textContent = `Editing journal ID: ${journalId}`;
-                    console.log('Attempting to edit first journal with ID:', journalId);
-                    
-                    // Call editJournal directly
-                    editJournal(journalId);
-                } else {
-                    document.getElementById('debug-edit-info').textContent = 'No journals found to edit';
-                    console.log('No journals found for testing edit');
-                }
+                loadJournals();
             });
 
             // Load data
@@ -509,16 +482,20 @@
         }
 
         // Toggle loading state on buttons
-        function toggleButtonLoading(button, isLoading) {
+        function setButtonLoading(button, isLoading) {
             if (isLoading) {
-                button.disabled = true;
                 button.classList.add('loading');
-                button.setAttribute('data-original-text', button.textContent);
-                button.textContent = 'Loading...';
+                button.disabled = true;
+                // Store original text
+                button.dataset.originalText = button.textContent;
+                button.textContent = 'Menyimpan...';
             } else {
-                button.disabled = false;
                 button.classList.remove('loading');
-                button.textContent = button.getAttribute('data-original-text') || 'Submit';
+                button.disabled = false;
+                // Restore original text
+                if (button.dataset.originalText) {
+                    button.textContent = button.dataset.originalText;
+                }
             }
         }
 
@@ -630,20 +607,10 @@
         }
 
         // Load journals
-        async function loadJournals(debug = false) {
+        async function loadJournals() {
             try {
                 document.getElementById('journals-loading').style.display = 'block';
                 document.getElementById('journals-list').style.display = 'none';
-                
-                // Show debug panel if in debug mode
-                const debugPanel = document.getElementById('journal-debug');
-                const debugText = document.getElementById('debug-text');
-                if (debug) {
-                    debugPanel.classList.remove('hidden');
-                    debugText.textContent = 'Loading journals...';
-                } else {
-                    debugPanel.classList.add('hidden');
-                }
                 
                 const filterKelas = document.getElementById('filter-kelas').value;
                 const filterDateStart = document.getElementById('filter-date-start').value;
@@ -654,48 +621,23 @@
                 if (filterDateStart) params.dateStart = filterDateStart;
                 if (filterDateEnd) params.dateEnd = filterDateEnd;
                 
-                if (debug) {
-                    debugText.textContent += '\nCalling API with params: ' + JSON.stringify(params);
-                }
-                
-                // Make API request with debug logs
+                // Make API request
                 console.log('Calling getJurnal API with params:', params);
                 const result = await callApi('getJurnal', params);
                 console.log('API Response for getJurnal:', result);
-                
-                if (debug) {
-                    debugText.textContent += '\nAPI Response: ' + JSON.stringify(result).substring(0, 200) + '...';
-                }
                 
                 if (result.success) {
                     const rawJournals = result.data || [];
                     console.log('Raw journal data received:', rawJournals);
                     
-                    if (debug) {
-                        debugText.textContent += '\nJournals count: ' + rawJournals.length;
-                        if (rawJournals.length > 0) {
-                            debugText.textContent += '\nFirst journal: ' + JSON.stringify(rawJournals[0]).substring(0, 200) + '...';
-                        } else {
-                            debugText.textContent += '\nNo journals found in API response';
-                        }
-                    }
-                    
                     // Check if rawJournals is actually an array
                     if (!Array.isArray(rawJournals)) {
                         console.error('Journal data is not an array:', rawJournals);
-                        
-                        if (debug) {
-                            debugText.textContent += '\nERROR: Journal data is not an array: ' + JSON.stringify(rawJournals);
-                        }
                         
                         // Try to convert to array if it's an object
                         if (rawJournals && typeof rawJournals === 'object') {
                             const journalsArray = Object.values(rawJournals);
                             console.log('Converted journal object to array:', journalsArray);
-                            
-                            if (debug) {
-                                debugText.textContent += '\nConverted to array with ' + journalsArray.length + ' items';
-                            }
                             
                             // Continue with the converted array
                             allJournals = normalizeJournals(journalsArray);
@@ -709,28 +651,13 @@
                     }
                     
                     console.log('Normalized journal data:', allJournals);
-                    
-                    if (debug) {
-                        debugText.textContent += '\nNormalized journals count: ' + allJournals.length;
-                    }
-                    
-                    renderJournals(allJournals, debug);
+                    renderJournals(allJournals);
                 } else {
                     console.error('Error loading journals:', result.error);
-                    
-                    if (debug) {
-                        debugText.textContent += '\nAPI Error: ' + result.error;
-                    }
-                    
                     showToast('error', 'Gagal memuat data jurnal. Silakan coba lagi.');
                 }
             } catch (error) {
                 console.error('Error loading journals:', error);
-                
-                if (debug) {
-                    document.getElementById('debug-text').textContent += '\nException: ' + error.message;
-                }
-                
                 showToast('error', 'Gagal memuat data jurnal. Silakan coba lagi.');
             } finally {
                 document.getElementById('journals-loading').style.display = 'none';
@@ -770,13 +697,9 @@
         }
 
         // Render journals
-        function renderJournals(journals, debug = false) {
+        function renderJournals(journals) {
             const journalsList = document.getElementById('journals-list');
             journalsList.innerHTML = '';
-            
-            if (debug) {
-                document.getElementById('debug-text').textContent += '\nRendering ' + journals.length + ' journals';
-            }
             
             if (!journals || journals.length === 0) {
                 journalsList.innerHTML = `
@@ -801,13 +724,6 @@
                     const journalKegiatan = journal.kegiatan_inti || '';
                     const journalDate = journal.tanggal || new Date().toISOString().split('T')[0];
                     const journalKelasId = journal.kelas_id || '';
-                    
-                    if (debug) {
-                        if (index === 0) {
-                            document.getElementById('debug-text').textContent += '\nFirst journal being rendered: ' +
-                                `ID=${journalId}, Materi=${journalMateri}, Date=${journalDate}, KelasID=${journalKelasId}`;
-                        }
-                    }
                     
                     console.log(`Rendering journal: ${journalMateri}, ID: ${journalId}, Date: ${journalDate}`);
                     
@@ -860,7 +776,7 @@
                 
                 journalsList.appendChild(journalCard);
                 
-                    // Add event listeners to buttons - directly attach to each element with debug logs
+                    // Add event listeners to buttons
                     const viewButton = journalCard.querySelector('.view-journal');
                     const editButton = journalCard.querySelector('.edit-journal');
                     const deleteButton = journalCard.querySelector('.delete-journal');
@@ -889,10 +805,6 @@
             } catch (error) {
                 console.error('Error rendering journals:', error);
                 
-                if (debug) {
-                    document.getElementById('debug-text').textContent += '\nError rendering journals: ' + error.message;
-                }
-                
                 // Show fallback error message in the list
                 journalsList.innerHTML = `
                     <div class="col-span-full text-center py-8 text-red-500">
@@ -909,7 +821,7 @@
             
             try {
                 const saveJournalBtn = document.getElementById('save-journal-btn');
-                toggleButtonLoading(saveJournalBtn, true);
+                setButtonLoading(saveJournalBtn, true);
                 
                 // Get form values
                 const journalId = document.getElementById('journal-id').value;
@@ -925,21 +837,7 @@
                 const refleksi = document.getElementById('journal-refleksi').value;
                 const rencana_tindak_lanjut = document.getElementById('journal-rencana-tindak-lanjut').value;
                 
-                // Log all form values for debugging
-                console.log('Form submitted with values:', {
-                    journalId,
-                    tanggal,
-                    kelas_id,
-                    materi,
-                    metode,
-                    media,
-                    kegiatan_pendahuluan: kegiatan_pendahuluan.substring(0, 20) + '...',
-                    kegiatan_inti: kegiatan_inti.substring(0, 20) + '...',
-                    kegiatan_penutup: kegiatan_penutup.substring(0, 20) + '...',
-                    evaluasi: evaluasi.substring(0, 20) + '...',
-                    refleksi: refleksi.substring(0, 20) + '...',
-                    rencana_tindak_lanjut: rencana_tindak_lanjut.substring(0, 20) + '...'
-                });
+
                 
                 // Validate required fields
                 if (!tanggal || !kelas_id || !materi || !kegiatan_inti) {
@@ -953,14 +851,7 @@
                     formattedDate = formattedDate.split('T')[0];
                 }
                 
-                // Debug the form submission
-                console.log('Submitting journal form with data:', {
-                    id: journalId || 'new',
-                    tanggal: formattedDate,
-                    kelas_id,
-                    materi,
-                    kegiatan_inti
-                });
+
                 
                 const params = {
                     tanggal: formattedDate,
@@ -1048,7 +939,7 @@
                 console.error('Error saving journal:', error);
                 showToast('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
             } finally {
-                toggleButtonLoading(document.getElementById('save-journal-btn'), false);
+                setButtonLoading(document.getElementById('save-journal-btn'), false);
             }
         }
 
@@ -1068,7 +959,7 @@
             document.getElementById('journal-rencana-tindak-lanjut').value = '';
             
             // Reset form title and edit mode indicator
-            const formTitle = document.querySelector('.bg-white.shadow-md.rounded-lg.overflow-hidden.mb-6.max-w-full .p-4.bg-blue-500 h3');
+            const formTitle = document.querySelector('.bg-white.shadow-md.rounded-lg.overflow-hidden.mb-6.max-w-full .p-4.bg-primary h3');
             if (formTitle) {
                 formTitle.textContent = 'Tambah Catatan Jurnal';
             }
@@ -1214,7 +1105,7 @@
                     }
                     
                     // Update form title to indicate editing mode
-                    const formTitle = formContainer.querySelector('.p-4.bg-blue-500 h3');
+                    const formTitle = formContainer.querySelector('.p-4.bg-primary h3');
                     if (formTitle) {
                         console.log('Form title element found:', formTitle);
                         formTitle.textContent = 'Edit Catatan Jurnal';
@@ -1222,8 +1113,8 @@
                         console.log('Form title element not found. Looking for alternative selectors...');
                         // Try alternative selectors
                         const alternativeTitle = formContainer.querySelector('h3') || 
-                                                formContainer.querySelector('.bg-blue-500 h3') ||
-                                                formContainer.querySelector('.text-white h3');
+                                                formContainer.querySelector('.bg-primary h3') ||
+                                                formContainer.querySelector('.text-primary-foreground h3');
                         if (alternativeTitle) {
                             console.log('Alternative title element found:', alternativeTitle);
                             alternativeTitle.textContent = 'Edit Catatan Jurnal';
@@ -1266,7 +1157,7 @@
                 if (!currentJournalId) return;
                 
                 const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-                toggleButtonLoading(confirmDeleteBtn, true);
+                setButtonLoading(confirmDeleteBtn, true);
                 
                 const result = await callApi('deleteJurnal', { id: currentJournalId });
                 
@@ -1281,7 +1172,7 @@
                 console.error('Error deleting journal:', error);
                 showToast('error', 'Terjadi kesalahan saat menghapus data. Silakan coba lagi.');
             } finally {
-                toggleButtonLoading(document.getElementById('confirm-delete-btn'), false);
+                setButtonLoading(document.getElementById('confirm-delete-btn'), false);
                 currentJournalId = null;
             }
         }

@@ -7,13 +7,13 @@
     <meta http-equiv="refresh" content="0;url=login.html">
     <script>
         // Check if user is already logged in
-        const userData = localStorage.getItem('eduadmin_user');
+        const userData = localStorage.getItem('kelasguru_user');
         if (userData) {
             try {
                 JSON.parse(userData); // Validate JSON
                 window.location.href = 'dashboard.html';
             } catch (e) {
-                localStorage.removeItem('eduadmin_user');
+                localStorage.removeItem('kelasguru_user');
                 window.location.href = 'login.html';
             }
         } else {

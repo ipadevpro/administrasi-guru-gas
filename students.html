@@ -13,6 +13,7 @@
     <script src="js/layout.js"></script>
     <script src="js/sidebar-fix.js"></script>
     <script src="toast.js"></script>
+    <script src="js/pagination.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -277,10 +278,22 @@
             initLayout();
             updatePageTitle('Siswa');
             
-            // Load students and classes data
-            loadData();
+            // Initialize infinite scroll
+            const infiniteScroll = new InfiniteScroll({
+                containerId: 'students-table-body',
+                onLoadMore: loadMoreStudents
+            });
             
-            // Event listeners
+            // Global variables
+            let students = [];
+            let classes = [];
+            let currentFilters = {
+                search: '',
+                classId: ''
+            };
+            let deleteStudentId = null;
+            
+            // Add event listeners
             document.getElementById('add-student-btn').addEventListener('click', showAddModal);
             document.getElementById('close-modal-btn').addEventListener('click', hideModal);
             document.getElementById('cancel-btn').addEventListener('click', hideModal);
@@ -292,246 +305,232 @@
             document.getElementById('confirm-delete-btn').addEventListener('click', deleteStudent);
             
             // Search and filter functionality
-            document.getElementById('search-input').addEventListener('input', applyFilters);
-            document.getElementById('filter-class').addEventListener('change', applyFilters);
-        });
-        
-        // Global variables
-        let students = [];
-        let classes = [];
-        
-        // Load students and classes data
-        async function loadData() {
-            try {
-                showLoading('students-table-body');
-                
-                // Clear any existing filter selections
-                document.getElementById('filter-class').value = "";
-                document.getElementById('search-input').value = "";
-                
-                // Force clear cache to get fresh data
-                localStorage.removeItem('admin_classes');
-                localStorage.setItem('admin_classes_timestamp', '0');
-                
-                // Change API_URL to direct variable if not defined
-                if (typeof API_URL === 'undefined') {
-                    window.API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
-                }
-                
-                console.log('Loading data from API_URL:', API_URL);
-                
-                // Load both classes and students in parallel
-                const [classesResult, studentsResult] = await Promise.all([
-                    // Classes data - direct API call
-                    (async () => {
-                        try {
-                            console.log('Loading classes via direct API call');
-                            const formData = new URLSearchParams();
-                            formData.append('action', 'getKelas');
-                            
-                            const response = await fetch(API_URL, {
-                                method: 'POST',
-                                body: formData
-                            }).then(res => res.json());
-                            
-                            console.log('Classes API response:', response);
-                            return response;
-                        } catch (error) {
-                            console.error('Error loading classes:', error);
-                            return { success: false, error: error.message };
-                        }
-                    })(),
-                    
-                    // Students data - direct API call
-                    (async () => {
-                        try {
-                            console.log('Loading students via direct API call');
-                            const formData = new URLSearchParams();
-                            formData.append('action', 'getSiswa');
-                            
-                            const response = await fetch(API_URL, {
-                                method: 'POST',
-                                body: formData
-                            }).then(res => res.json());
-                            
-                            console.log('Students API response:', response);
-                            return response;
-                        } catch (error) {
-                            console.error('Error loading students:', error);
-                            return { success: false, error: error.message };
-                        }
-                    })()
-                ]);
-                
-                // Process classes results
-                if (classesResult && classesResult.success) {
-                    classes = classesResult.data || [];
-                    console.log('Loaded classes:', classes);
-                    populateClassDropdowns();
-                } else {
-                    console.error('Failed to load classes with all methods');
-                }
-                
-                // Process students results
-                if (studentsResult && studentsResult.success) {
-                    // Log the raw data first to check the structure
-                    console.log('Raw student data from API:', studentsResult.data);
-                    
-                    // Clear existing data
-                    students = [];
-                    
-                    if (Array.isArray(studentsResult.data)) {
-                        students = studentsResult.data.map(student => {
-                            // Normalize the ID properties
-                            const id = student.id || student.siswa_id || '';
-                            // Generate a random ID if none exists
-                            const safeId = id || ('generated-' + Math.random().toString(36).substring(2, 9));
-                            
-                            // Ensure kelas and kelas_id are properly extracted
-                            const kelasId = student.kelas || student.kelas_id || '';
-                            
-                            return {
-                                ...student,
-                                id: String(safeId),
-                                siswa_id: String(safeId),
-                                kelas: kelasId,
-                                kelas_id: kelasId
-                            };
-                        });
-                    }
-                    
-                    console.log('Normalized student data:', students);
-                    console.log('Total students loaded:', students.length);
-                    
-                    // Check for students by class (for debugging)
-                    const studentsByClass = {};
-                    students.forEach(student => {
-                        const kelasId = student.kelas || student.kelas_id || 'unknown';
-                        studentsByClass[kelasId] = (studentsByClass[kelasId] || 0) + 1;
-                    });
-                    console.log('Students distribution by class:', studentsByClass);
-                    
-                    renderStudentsTable(students);
-                } else {
-                    showError('students-table-body', 'Gagal memuat data siswa dengan semua metode. Silakan refresh halaman.');
-                }
-            } catch (error) {
-                console.error('Error loading data:', error);
-                showError('students-table-body', 'Terjadi kesalahan saat memuat data. Periksa konsol untuk detail.');
-            }
-        }
-        
-        // Populate class dropdowns in filter and form
-        function populateClassDropdowns() {
-            if (!classes || !Array.isArray(classes) || classes.length === 0) {
-                console.warn('No classes available to populate dropdowns');
-                return;
-            }
-            
-            // Sort classes by name
-            classes.sort((a, b) => {
-                const nameA = a.nama || a.nama_kelas || '';
-                const nameB = b.nama || b.nama_kelas || '';
-                return nameA.localeCompare(nameB);
+            const searchInput = document.getElementById('search-input');
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterChanged();
+                }, 300);
             });
             
-            // Filter dropdown
-            const filterSelect = document.getElementById('filter-class');
-            if (filterSelect) {
-                filterSelect.innerHTML = '<option value="">Semua Kelas</option>';
-                
-                // Add options
-                classes.forEach(kelas => {
-                    const id = kelas.id || kelas.kelas_id;
-                    const nama = kelas.nama || kelas.nama_kelas || 'Kelas Tanpa Nama';
-                    
-                    if (id) {
-                        const option = document.createElement('option');
-                        option.value = id;
-                        option.textContent = nama;
-                        filterSelect.appendChild(option);
-                    }
-                });
+            const classFilter = document.getElementById('filter-class');
+            if (classFilter) {
+                classFilter.addEventListener('change', filterChanged);
             }
             
-            // Form select
-            const formSelect = document.getElementById('kelas');
-            if (formSelect) {
-                formSelect.innerHTML = '<option value="">Pilih Kelas</option>';
-                
-                // Add options
-                classes.forEach(kelas => {
-                    const id = kelas.id || kelas.kelas_id;
-                    const nama = kelas.nama || kelas.nama_kelas || 'Kelas Tanpa Nama';
-                    
-                    if (id) {
-                        const option = document.createElement('option');
-                        option.value = id;
-                        option.textContent = nama;
-                        formSelect.appendChild(option);
-                    }
+            // Setup Filter Options
+            fetchClassOptions()
+                .then(setupClassFilter)
+                .catch(error => {
+                    console.error('Error fetching class options:', error);
+                    showToast('error', 'Gagal memuat opsi kelas');
                 });
-            }
-        }
-        
-        // Render students table
-        function renderStudentsTable(data) {
-            const tableBody = document.getElementById('students-table-body');
             
-            if (!data || data.length === 0) {
-                tableBody.innerHTML = `
+            // Setup class filter dropdown
+            function setupClassFilter(classData) {
+                // Store classes in global variable for later use
+                classes = classData;
+                
+                // Get the filter dropdown element
+                const classFilter = document.getElementById('filter-class');
+                if (!classFilter) {
+                    console.error('Class filter element not found');
+                    return;
+                }
+                
+                // Clear existing options except the first "All Classes" option
+                while (classFilter.options.length > 1) {
+                    classFilter.remove(1);
+                }
+                
+                // Sort classes by name for better UX
+                classData.sort((a, b) => {
+                    const nameA = a.nama_kelas || a.nama || '';
+                    const nameB = b.nama_kelas || b.nama || '';
+                    return nameA.localeCompare(nameB);
+                });
+                
+                // Add options for each class
+                classData.forEach(kelas => {
+                    const option = document.createElement('option');
+                    option.value = kelas.id;
+                    option.textContent = kelas.nama_kelas || kelas.nama || `Kelas ${kelas.id}`;
+                    classFilter.appendChild(option);
+                });
+                
+                console.log(`Added ${classData.length} class options to filter dropdown`);
+            }
+            
+            // Load initial data
+            loadStudents();
+            
+            // Function to handle filter changes
+            function filterChanged() {
+                // Reset students array and infinite scroll
+                students = [];
+                infiniteScroll.reset();
+                
+                // Update current filters
+                currentFilters = {
+                    search: document.getElementById('search-input').value.trim(),
+                    classId: document.getElementById('filter-class').value
+                };
+                
+                // Load students with new filters
+                loadStudents();
+            }
+            
+            // Function to load students with pagination
+            async function loadStudents() {
+                const studentsTableBody = document.getElementById('students-table-body');
+                
+                // Show loading indicator
+                studentsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center">
+                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                            <p class="mt-2 text-gray-500">Memuat data siswa...</p>
+                        </td>
+                    </tr>
+                `;
+                
+                try {
+                    // Setup filters
+                    const filters = {};
+                    if (currentFilters.search) {
+                        filters.search = currentFilters.search;
+                    }
+                    if (currentFilters.classId) {
+                        filters.kelas_id = currentFilters.classId;
+                    }
+                    
+                    // Get first page of students
+                    const response = await getPaginatedSiswa(1, 20, filters);
+                    
+                    if (response.success) {
+                        students = response.data;
+                        
+                        // Update infinite scroll
+                        infiniteScroll.hasMore = response.pagination.hasMore;
+                        
+                        // Render students
+                        renderStudentsTable();
+                } else {
+                        showToast('error', 'Gagal memuat data: ' + response.error);
+                        studentsTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                                    Error: ${response.error}
+                                </td>
+                            </tr>
+                        `;
+                }
+            } catch (error) {
+                    console.error('Error loading students:', error);
+                    showToast('error', 'Gagal memuat data: ' + error.message);
+                    studentsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                                Error: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            // Function to load more students when scrolling
+            async function loadMoreStudents(page, callback) {
+                try {
+                    // Setup filters
+                    const filters = {};
+                    if (currentFilters.search) {
+                        filters.search = currentFilters.search;
+                    }
+                    if (currentFilters.classId) {
+                        filters.kelas_id = currentFilters.classId;
+                    }
+                    
+                    // Get next page of students
+                    const response = await getPaginatedSiswa(page, 20, filters);
+                    
+                    if (response.success) {
+                        // Append new students to existing array
+                        students = [...students, ...response.data];
+                        
+                        // Render updated students list
+                        renderStudentsTable(true);
+                        
+                        // Call callback with hasMore status
+                        callback(response.pagination.hasMore);
+                    } else {
+                        showToast('error', 'Gagal memuat data tambahan: ' + response.error);
+                        callback(false);
+                    }
+                } catch (error) {
+                    console.error('Error loading more students:', error);
+                    showToast('error', 'Gagal memuat data tambahan: ' + error.message);
+                    callback(false);
+                }
+            }
+            
+            // Render students table
+            function renderStudentsTable(isAppend = false) {
+                const studentsTableBody = document.getElementById('students-table-body');
+                
+                if (!isAppend) {
+                    // If not appending, clear the table body first
+                    studentsTableBody.innerHTML = '';
+                } else {
+                    // If appending, remove the loader first
+                    const loader = document.getElementById('infinite-scroll-loader');
+                    if (loader) {
+                        loader.remove();
+                    }
+                }
+                
+                if (students.length === 0 && !isAppend) {
+                    studentsTableBody.innerHTML = `
                 <tr>
                     <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                        Belum ada data siswa
+                                Tidak ada data siswa.
                     </td>
                 </tr>
                 `;
                 return;
             }
             
-            console.log('Rendering students table with', data.length, 'students');
+                // If appending, only render the new items
+                const startIndex = isAppend ? studentsTableBody.children.length : 0;
+                const studentsToRender = students.slice(startIndex);
             
             let html = '';
-            data.forEach(siswa => {
-                // Handle different property naming conventions
-                const id = siswa.id || siswa.siswa_id || '';
-                const nama = siswa.nama || siswa.nama_siswa || '-';
-                const nis = siswa.nis || siswa.nomor_induk || '-';
-                const kelasId = siswa.kelas || siswa.kelas_id || '';
-                const jenisKelamin = siswa.jenisKelamin || siswa.jenis_kelamin || '-';
-                const tanggalLahir = siswa.tanggalLahir || siswa.tanggal_lahir || '';
                 
-                // Find class name from class ID
-                const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
-                const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '-') : '-';
-                
-                console.log(`Rendering student: ${nama}, Class ID: ${kelasId}, Class Name: ${kelasNama}`);
-                
-                // Ensure ID is not undefined or empty
-                const safeId = id || 'no-id-' + Math.random().toString(36).substring(2, 9);
+                studentsToRender.forEach(student => {
+                    const className = getClassName(student.kelas_id);
                 
                 html += `
-                <tr data-student-id="${safeId}">
+                        <tr>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">${nama}</div>
+                                <div class="font-medium text-gray-900">${student.nama || '-'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${nis}
+                                ${student.nis || '-'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${kelasNama}
+                                ${className}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${jenisKelamin}
+                                ${student.jenis_kelamin || '-'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${formatDate(tanggalLahir)}
+                                ${student.tanggal_lahir ? formatDate(student.tanggal_lahir) : '-'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="edit-btn text-blue-600 hover:text-blue-900 mr-3" onclick="showEditModal('${safeId}')">
+                                <button class="edit-btn text-blue-600 hover:text-blue-900 mr-3" data-id="${student.id}">
                             Edit
                         </button>
-                        <button class="delete-btn text-red-600 hover:text-red-900" onclick="showDeleteModal('${safeId}')">
+                                <button class="delete-btn text-red-600 hover:text-red-900" data-id="${student.id}" data-name="${student.nama}">
                             Hapus
                         </button>
                     </td>
@@ -539,70 +538,53 @@
                 `;
             });
             
-            tableBody.innerHTML = html;
-        }
-        
-        // Format date from ISO string to local date format
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date)) return dateString; // Return original if not valid date
-                
-                return date.toLocaleDateString();
-            } catch (error) {
-                console.error('Error formatting date:', error);
-                return dateString; // Return original on error
-            }
-        }
-        
-        // Apply search and filter
-        function applyFilters() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const classFilter = document.getElementById('filter-class').value;
-            
-            console.log('Applying filters - search:', searchTerm, 'class:', classFilter);
-            console.log('Total students before filtering:', students.length);
-            
-            let filteredStudents = [...students];
-            
-            // Apply class filter
-            if (classFilter) {
-                console.log('Filtering by class ID:', classFilter);
-                filteredStudents = filteredStudents.filter(student => {
-                    const studentKelasId = student.kelas || student.kelas_id || '';
-                    const result = studentKelasId === classFilter;
-                    if (!result) {
-                        console.log('Student filtered out due to class mismatch:', student.nama, 
-                                    'student class:', studentKelasId, 
-                                    'filter class:', classFilter);
+                if (isAppend) {
+                    // Append to existing table
+                    const tempContainer = document.createElement('tbody');
+                    tempContainer.innerHTML = html;
+                    while (tempContainer.firstChild) {
+                        studentsTableBody.appendChild(tempContainer.firstChild);
                     }
-                    return result;
+                } else {
+                    // Replace entire table contents
+                    studentsTableBody.innerHTML = html;
+                }
+                
+                // Attach event listeners to new buttons
+                const newEditButtons = isAppend 
+                    ? Array.from(studentsTableBody.children).slice(startIndex).map(row => row.querySelector('.edit-btn'))
+                    : document.querySelectorAll('.edit-btn');
+                    
+                const newDeleteButtons = isAppend
+                    ? Array.from(studentsTableBody.children).slice(startIndex).map(row => row.querySelector('.delete-btn'))
+                    : document.querySelectorAll('.delete-btn');
+                
+                newEditButtons.forEach(btn => {
+                    if (btn) {
+                        btn.addEventListener('click', function() {
+                            const id = this.getAttribute('data-id');
+                            showEditModal(id);
+                        });
+                    }
                 });
-                console.log('Students after class filter:', filteredStudents.length);
+                
+                newDeleteButtons.forEach(btn => {
+                    if (btn) {
+                        btn.addEventListener('click', function() {
+                            const id = this.getAttribute('data-id');
+                            const name = this.getAttribute('data-name');
+                            showDeleteModal(id, name);
+                        });
+                    }
+                });
             }
             
-            // Apply search term
-            if (searchTerm) {
-                console.log('Filtering by search term:', searchTerm);
-                filteredStudents = filteredStudents.filter(student => {
-                    const nama = (student.nama || student.nama_siswa || '').toLowerCase();
-                    const nis = (student.nis || student.nomor_induk || '').toLowerCase();
-                    const kelasId = student.kelas || student.kelas_id || '';
-                    
-                    // Get class name
-                    const kelasObj = classes.find(k => (k.id === kelasId || k.kelas_id === kelasId));
-                    const kelasNama = kelasObj ? (kelasObj.nama || kelasObj.nama_kelas || '').toLowerCase() : '';
-                    
-                    return nama.includes(searchTerm) || 
-                           nis.includes(searchTerm) || 
-                           kelasNama.includes(searchTerm);
-                });
-                console.log('Students after search filter:', filteredStudents.length);
-            }
-            
-            renderStudentsTable(filteredStudents);
+            // Function to get class name by ID
+            function getClassName(classId) {
+                if (!classId) return '-';
+                
+                const foundClass = classes.find(c => String(c.id) === String(classId));
+                return foundClass ? (foundClass.nama_kelas || foundClass.nama || 'Kelas ' + classId) : 'Kelas ' + classId;
         }
         
         // Show modal for adding a new student
@@ -610,36 +592,113 @@
             document.getElementById('modal-title').textContent = 'Tambah Siswa';
             document.getElementById('student-id').value = '';
             document.getElementById('student-form').reset();
+                
+                // Populate class dropdown
+                populateClassDropdown();
+                
             document.getElementById('student-modal').classList.remove('hidden');
         }
+            
+            // Populate the class dropdown in the form
+            function populateClassDropdown() {
+                const classSelect = document.getElementById('kelas');
+                if (!classSelect) {
+                    console.error('Class select element not found');
+                    return;
+                }
+                
+                // Clear existing options except the first blank option
+                while (classSelect.options.length > 1) {
+                    classSelect.remove(1);
+                }
+                
+                // If classes array is empty, fetch them first
+                if (!classes || classes.length === 0) {
+                    fetchClassOptions()
+                        .then(classData => {
+                            // Store in global variable
+                            classes = classData;
+                            // Add options
+                            addClassOptions(classSelect, classData);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching class options for dropdown:', error);
+                            showToast('error', 'Gagal memuat daftar kelas');
+                        });
+                } else {
+                    // Add options from existing classes data
+                    addClassOptions(classSelect, classes);
+                }
+            }
+            
+            // Helper function to add class options to a select element
+            function addClassOptions(selectElement, classData) {
+                // Sort classes by name
+                const sortedClasses = [...classData].sort((a, b) => {
+                    const nameA = a.nama_kelas || a.nama || '';
+                    const nameB = b.nama_kelas || b.nama || '';
+                    return nameA.localeCompare(nameB);
+                });
+                
+                // Add options
+                sortedClasses.forEach(kelas => {
+                    const option = document.createElement('option');
+                    option.value = kelas.id;
+                    option.textContent = kelas.nama_kelas || kelas.nama || `Kelas ${kelas.id}`;
+                    selectElement.appendChild(option);
+                });
+                
+                console.log(`Added ${sortedClasses.length} class options to student form dropdown`);
+            }
         
         // Show modal for editing a student
         function showEditModal(id) {
             console.log("showEditModal called with ID:", id);
             // Normalize id to string for comparison
             const idStr = String(id);
-            const student = students.find(s => String(s.id) === idStr || String(s.siswa_id) === idStr);
-            console.log("Found student object:", student);
-            if (!student) {
+                const student = students.find(s => String(s.id) === idStr || String(s.siswa_id) === idStr);
+                console.log("Found student object:", student);
+                if (!student) {
                 console.error("Student not found with ID:", id);
-                showToast('error', "Error: Student not found with ID: " + id);
+                    showToast('error', "Error: Student not found with ID: " + id);
                 return;
             }
             
             // Handle different property naming conventions
-            const nama = student.nama || student.nama_siswa || '';
-            const nis = student.nis || student.nomor_induk || '';
-            const kelasId = student.kelas || student.kelas_id || '';
-            const jenisKelamin = student.jenisKelamin || student.jenis_kelamin || '';
-            const tanggalLahir = student.tanggalLahir || student.tanggal_lahir || '';
-            const alamat = student.alamat || '';
-            const noTelp = student.noTelp || student.no_telp || student.telepon || '';
+                const nama = student.nama || student.nama_siswa || '';
+                const nis = student.nis || student.nomor_induk || '';
+                const kelasId = student.kelas || student.kelas_id || '';
+                const jenisKelamin = student.jenisKelamin || student.jenis_kelamin || '';
+                const tanggalLahir = student.tanggalLahir || student.tanggal_lahir || '';
+                const alamat = student.alamat || '';
+                const noTelp = student.noTelp || student.no_telp || student.telepon || '';
             
             document.getElementById('modal-title').textContent = 'Edit Siswa';
             document.getElementById('student-id').value = id;
             document.getElementById('nama').value = nama;
             document.getElementById('nis').value = nis;
-            document.getElementById('kelas').value = kelasId;
+                
+                // Populate class dropdown before setting selected value
+                populateClassDropdown();
+                
+                // Set selected class after a small delay to ensure dropdown is populated
+                setTimeout(() => {
+                    const kelasSelect = document.getElementById('kelas');
+                    if (kelasSelect) {
+                        kelasSelect.value = kelasId;
+                        
+                        // If the value wasn't set properly (option might not exist)
+                        if (kelasSelect.value !== kelasId && kelasId) {
+                            // Try to add the missing class option
+                            const option = document.createElement('option');
+                            option.value = kelasId;
+                            option.textContent = getClassName(kelasId);
+                            kelasSelect.appendChild(option);
+                            kelasSelect.value = kelasId;
+                            console.log(`Added missing class option for ID: ${kelasId}`);
+                        }
+                    }
+                }, 100);
             
             // Set gender radio
             if (jenisKelamin === 'Laki-laki') {
@@ -676,13 +735,13 @@
         }
         
         // Show delete confirmation modal
-        function showDeleteModal(id) {
+            function showDeleteModal(id, name) {
             console.log("showDeleteModal called with ID:", id, "Type:", typeof id);
             
             // Check if we have a proper ID
             if (!id || id === 'undefined') {
                 console.error("Invalid ID received:", id);
-                showToast('error', "Error: Invalid student ID");
+                    showToast('error', "Error: Invalid student ID");
                 return;
             }
             
@@ -690,7 +749,7 @@
             const idStr = String(id);
             
             // Find the student in the students array
-            const student = students.find(s => {
+                const student = students.find(s => {
                 console.log("Comparing student:", 
                     "ID from student:", s.id, "type:", typeof s.id,
                     "siswa_id from student:", s.siswa_id, "type:", typeof s.siswa_id,
@@ -698,12 +757,12 @@
                 return String(s.id) === idStr || String(s.siswa_id) === idStr;
             });
             
-            console.log("Found student object:", student);
-            console.log("Student object keys:", student ? Object.keys(student) : "No student found");
+                console.log("Found student object:", student);
+                console.log("Student object keys:", student ? Object.keys(student) : "No student found");
             
-            if (!student) {
+                if (!student) {
                 console.error("Student not found with ID:", id);
-                showToast('error', "Error: Student not found with ID: " + id);
+                    showToast('error', "Error: Student not found with ID: " + id);
                 return;
             }
             
@@ -711,7 +770,7 @@
             window.deleteStudentId = id;
             console.log("Set deleteStudentId to:", window.deleteStudentId);
             
-            document.getElementById('delete-student-name').textContent = student.nama || student.nama_siswa;
+                document.getElementById('delete-student-name').textContent = name || student.nama || student.nama_siswa;
             document.getElementById('delete-modal').classList.remove('hidden');
         }
         
@@ -720,36 +779,18 @@
             document.getElementById('delete-modal').classList.add('hidden');
             // Don't clear deleteStudentId here
         }
-        
-        // Helper function to set loading state on buttons
-        function setButtonLoading(button, isLoading) {
-            if (isLoading) {
-                button.classList.add('loading');
-                button.disabled = true;
-                // Store original text
-                button.dataset.originalText = button.textContent;
-                button.textContent = 'Menyimpan...';
-            } else {
-                button.classList.remove('loading');
-                button.disabled = false;
-                // Restore original text
-                if (button.dataset.originalText) {
-                    button.textContent = button.dataset.originalText;
-                }
-            }
-        }
 
         // Handle form submission
         async function handleSubmit(e) {
             e.preventDefault();
             
-            const submitButton = e.target.querySelector('button[type="submit"]');
-            setButtonLoading(submitButton, true);
-            
             const id = document.getElementById('student-id').value;
             const isEdit = !!id;
             
-            console.log('Form submission - isEdit:', isEdit, 'ID:', id);
+                // Show loading state
+                const saveBtn = e.target.querySelector('button[type="submit"]');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⭮</span> Menyimpan...';
             
             // Get gender value from radio buttons
             let gender = '';
@@ -894,38 +935,41 @@
                     // Directly update the table to show the change immediately
                     renderStudentsTable(students);
                     
-                    showToast('success', `Siswa berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
+                        showToast('success', `Siswa berhasil ${isEdit ? 'diperbarui' : 'ditambahkan'}.`);
                     
                     // Optional: Reload data from server to ensure everything is in sync
                     setTimeout(() => {
-                        loadData();
+                            loadStudents();
                     }, 500);
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    showToast('error', `Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} siswa: ${errorMsg}`);
+                        showToast('error', `Gagal ${isEdit ? 'memperbarui' : 'menambahkan'} siswa: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error saving student:', error);
-                showToast('error', `Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} siswa. Periksa konsol untuk detail.`);
+                    showToast('error', `Terjadi kesalahan saat ${isEdit ? 'memperbarui' : 'menambahkan'} siswa. Periksa konsol untuk detail.`);
             } finally {
-                setButtonLoading(submitButton, false);
+                    // Reset button state
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = 'Simpan';
             }
         }
         
         // Delete student
         async function deleteStudent() {
-            const confirmButton = document.getElementById('confirm-delete-btn');
-            setButtonLoading(confirmButton, true);
-            
             // Use the global variable
             const studentIdToDelete = window.deleteStudentId;
             console.log('Deleting student with ID (from global var):', studentIdToDelete);
             
             if (!studentIdToDelete || studentIdToDelete === 'undefined') {
-                showToast('error', 'Error: Invalid student ID to delete');
-                setButtonLoading(confirmButton, false);
+                    showToast('error', 'Error: Invalid student ID to delete');
                 return;
             }
+                
+                // Show loading state
+                const deleteBtn = document.getElementById('confirm-delete-btn');
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<span class="inline-block animate-spin mr-2">⭮</span> Menghapus...';
             
             try {
                 let response;
@@ -964,18 +1008,20 @@
                     
                     // Clear the ID after successful deletion
                     window.deleteStudentId = null;
-                    applyFilters(); // Re-apply any active filters
+                        filterChanged(); // Re-apply any active filters
                     
-                    showToast('success', 'Siswa berhasil dihapus.');
+                        showToast('success', 'Siswa berhasil dihapus.');
                 } else {
                     const errorMsg = response && response.error ? response.error : 'Unknown error occurred';
-                    showToast('error', `Gagal menghapus siswa: ${errorMsg}`);
+                        showToast('error', `Gagal menghapus siswa: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error deleting student:', error);
-                showToast('error', 'Terjadi kesalahan saat menghapus siswa: ' + error.message);
+                    showToast('error', 'Terjadi kesalahan saat menghapus siswa: ' + error.message);
             } finally {
-                setButtonLoading(confirmButton, false);
+                    // Reset button state
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = 'Hapus';
             }
         }
         
@@ -1019,6 +1065,27 @@
             localStorage.removeItem('admin_classes_timestamp');
             console.log('Data cache cleared');
         }
+            
+            // Format date for display (DD/MM/YYYY)
+            function formatDate(dateString) {
+                if (!dateString) return '-';
+                
+                try {
+                    const date = new Date(dateString);
+                    if (isNaN(date)) return dateString;
+                    
+                    // Format as DD/MM/YYYY
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const year = date.getFullYear();
+                    
+                    return `${day}/${month}/${year}`;
+                } catch (error) {
+                    console.error('Error formatting date:', error);
+                    return dateString;
+                }
+            }
+        });
     </script>
 </body>
 </html> 

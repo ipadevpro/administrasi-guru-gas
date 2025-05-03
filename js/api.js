@@ -2,7 +2,7 @@
 // Following CORS bypass technique rules
 
 // Replace with your deployed Google Apps Script web app URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbyMi7fujzXUHDC_vwy6y7BSp2RqG1miOMUzzZURPyvSZObPW5jYNWcUw-n6n7N0211j2g/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw3RPwTO51dWNJGA2b7VeueGEQMV5kZkVrDd1QQdP9ull9XYloK5dEqN1w-andFFS-bXQ/exec';
 
 // Generic API function for making requests to the GAS backend
 async function callApi(action, params = {}) {
@@ -106,9 +106,28 @@ async function deleteData(entityType, id) {
     return callApi('delete' + entityType, { id });
 }
 
+// === Paginated Data Operations ===
+async function getPaginatedData(entityType, page = 1, pageSize = 10, filters = {}) {
+    return callApi('get' + entityType, { 
+        page, 
+        pageSize, 
+        ...filters,
+        paginated: true
+    });
+}
+
 // === Kelas (Class) API ===
 async function getKelas(id) {
     return id ? getDataById('Kelas', id) : getAllData('Kelas');
+}
+
+async function getPaginatedKelas(page = 1, pageSize = 10, filters = {}) {
+    return callApi('getKelas', { 
+        page, 
+        pageSize, 
+        ...filters,
+        paginated: true
+    });
 }
 
 async function createKelas(kelasData) {
@@ -131,6 +150,10 @@ async function getSiswa(id, kelas_id) {
     return callApi('getSiswa', params);
 }
 
+async function getPaginatedSiswa(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('Siswa', page, pageSize, filters);
+}
+
 async function createSiswa(siswaData) {
     return createData('Siswa', siswaData);
 }
@@ -149,6 +172,10 @@ async function getTugas(id, kelas_id) {
     if (id) params.id = id;
     if (kelas_id) params.kelas_id = kelas_id;
     return callApi('getTugas', params);
+}
+
+async function getPaginatedTugas(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('Tugas', page, pageSize, filters);
 }
 
 async function createTugas(tugasData) {
@@ -172,6 +199,10 @@ async function getNilai(id, siswa_id, tugas_id) {
     return callApi('getNilai', params);
 }
 
+async function getPaginatedNilai(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('Nilai', page, pageSize, filters);
+}
+
 async function createNilai(nilaiData) {
     return createData('Nilai', nilaiData);
 }
@@ -193,6 +224,10 @@ async function getPresensi(id, kelas_id, tanggal) {
     return callApi('getPresensi', params);
 }
 
+async function getPaginatedPresensi(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('Presensi', page, pageSize, filters);
+}
+
 async function createPresensi(presensiData) {
     return createData('Presensi', presensiData);
 }
@@ -208,6 +243,10 @@ async function deletePresensi(id) {
 // === Event API ===
 async function getEvent(id) {
     return id ? getDataById('Event', id) : getAllData('Event');
+}
+
+async function getPaginatedEvent(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('Event', page, pageSize, filters);
 }
 
 async function createEvent(eventData) {
@@ -230,6 +269,10 @@ async function getJurnal(id, kelas_id) {
     return callApi('getJurnal', params);
 }
 
+async function getPaginatedJurnal(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('Jurnal', page, pageSize, filters);
+}
+
 async function createJurnal(jurnalData) {
     return createData('Jurnal', jurnalData);
 }
@@ -248,6 +291,10 @@ async function getBankSoal(id, kategori) {
     if (id) params.id = id;
     if (kategori) params.kategori = kategori;
     return callApi('getBankSoal', params);
+}
+
+async function getPaginatedBankSoal(page = 1, pageSize = 10, filters = {}) {
+    return getPaginatedData('BankSoal', page, pageSize, filters);
 }
 
 async function createBankSoal(soalData) {

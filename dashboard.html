@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Admin Guru</title>
+    <title>Dashboard - KelasGuru</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjU2IDU2TDU2IDE2Mi41VjE4NEwyNTYgMjkwLjVMNDU2IDE4NFYxNjIuNUwyNTYgNTZaIiBmaWxsPSIjMzY4NWZmIi8+PHBhdGggZD0iTTQ1NiAyMDhMNDEzIDIyOFYzMTBDMzkwLjUgMzQ0LjUgMzUxIDM3NiAyNTYgMzc2QzE2MSAzNzYgMTIxLjUgMzQ0LjUgOTkgMzEwVjIyOEw1NiAyMDhWMzM2Qzg3LjUgMzkwLjUgMTU4IDQ1NiAyNTYgNDU2QzM1NCA0NTYgNDI0LjUgMzkwLjUgNDU2IDMzNlYyMDhaIiBmaWxsPSIjMzY4NWZmIi8+PHBhdGggZD0iTTM2OCAyNDJWMzA2LjVMMzk2IDI4MlYyMjNMMzY4IDI0MloiIGZpbGw9IiMzNjg1ZmYiLz48cGF0aCBkPSJNMTY5IDIzMkwxNTEgMjI4LjVMMTQzIDI1MkwxNjAgMjUwTDE2OSAyMzJaIiBzdHJva2U9IiMzNjg1ZmYiIHN0cm9rZS13aWR0aD0iOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTE2OSAyMzJMMjI1IDI0NUwyOTYgMjQwLjVMMzQwIDIxMiIgc3Ryb2tlPSIjMzY4NWZmIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="shadcn-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -217,129 +218,138 @@
                     <p class="text-sm text-muted-foreground">Selamat datang di panel administrasi guru Anda</p>
                 </div>
                 
-                <!-- Dashboard stats grid -->
-                <div class="dashboard-grid mb-6">
+                <!-- Dashboard tabs for lazy loading -->
+                <div class="border-b mb-6">
+                    <div class="flex flex-wrap -mb-px">
+                        <button class="lazy-tab mr-2 inline-block p-4 border-b-2 rounded-t-lg text-foreground hover:text-primary hover:border-primary transition-colors" data-tab-id="dashboard-overview" data-active="true">
+                            Overview
+                        </button>
+                        <button class="lazy-tab mr-2 inline-block p-4 border-b-2 rounded-t-lg text-foreground hover:text-primary hover:border-primary transition-colors" data-tab-id="dashboard-recent-activity">
+                            Aktivitas Terbaru
+                        </button>
+                        <button class="lazy-tab mr-2 inline-block p-4 border-b-2 rounded-t-lg text-foreground hover:text-primary hover:border-primary transition-colors" data-tab-id="dashboard-upcoming">
+                            Jadwal Mendatang
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Dashboard content sections -->
+                <div id="dashboard-overview" class="lazy-tab-content">
+                    <!-- Dashboard stats grid -->
+                    <div class="dashboard-grid mb-6">
                     <!-- Class Count -->
-                    <div class="stat-card shadcn-card">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-blue-100 p-2 rounded-full">
-                                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-base font-medium">Kelas</h3>
-                                </div>
-                                <span class="badge badge-secondary">Total</span>
-                            </div>
-                            <div id="kelas-count-skeleton" class="skeleton h-8 w-16 mb-3"></div>
-                            <div id="kelas-count-container" class="hidden">
-                                <div class="text-3xl font-bold mb-2" id="kelas-count">-</div>
-                            </div>
-                            <a href="classes.html" class="text-sm text-primary hover:underline flex items-center mt-3 transition-colors">
-                                Lihat semua kelas
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        <div class="stat-card shadcn-card">
+                            <div class="p-5">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="bg-blue-100 p-2 rounded-full">
+                                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                 </svg>
-                            </a>
+                            </div>
+                                        <h3 class="text-base font-medium">Kelas</h3>
+                                    </div>
+                                    <span class="badge badge-secondary">Total</span>
                         </div>
+                                <div id="kelas-count-skeleton" class="skeleton h-8 w-16 mb-3"></div>
+                                <div id="kelas-count-container" class="hidden">
+                        <div class="text-3xl font-bold mb-2" id="kelas-count">-</div>
+                                </div>
+                                <a href="classes.html" class="text-sm text-primary hover:underline flex items-center mt-3 transition-colors">
+                            Lihat semua kelas
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                            </div>
                     </div>
                     
                     <!-- Student Count -->
-                    <div class="stat-card shadcn-card">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-green-100 p-2 rounded-full">
-                                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-base font-medium">Siswa</h3>
-                                </div>
-                                <span class="badge badge-secondary">Total</span>
-                            </div>
-                            <div id="siswa-count-skeleton" class="skeleton h-8 w-16 mb-3"></div>
-                            <div id="siswa-count-container" class="hidden">
-                                <div class="text-3xl font-bold mb-2" id="siswa-count">-</div>
-                            </div>
-                            <a href="students.html" class="text-sm text-primary hover:underline flex items-center mt-3 transition-colors">
-                                Lihat semua siswa
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        <div class="stat-card shadcn-card">
+                            <div class="p-5">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="bg-green-100 p-2 rounded-full">
+                                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                 </svg>
-                            </a>
+                            </div>
+                                        <h3 class="text-base font-medium">Siswa</h3>
+                                    </div>
+                                    <span class="badge badge-secondary">Total</span>
                         </div>
+                                <div id="siswa-count-skeleton" class="skeleton h-8 w-16 mb-3"></div>
+                                <div id="siswa-count-container" class="hidden">
+                        <div class="text-3xl font-bold mb-2" id="siswa-count">-</div>
+                                </div>
+                                <a href="students.html" class="text-sm text-primary hover:underline flex items-center mt-3 transition-colors">
+                            Lihat semua siswa
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                            </div>
                     </div>
                     
                     <!-- Assignment Count -->
-                    <div class="stat-card shadcn-card">
-                        <div class="p-5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="bg-purple-100 p-2 rounded-full">
-                                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-base font-medium">Tugas</h3>
-                                </div>
-                                <span class="badge badge-secondary">Total</span>
-                            </div>
-                            <div id="tugas-count-skeleton" class="skeleton h-8 w-16 mb-3"></div>
-                            <div id="tugas-count-container" class="hidden">
-                                <div class="text-3xl font-bold mb-2" id="tugas-count">-</div>
-                            </div>
-                            <a href="assignments.html" class="text-sm text-primary hover:underline flex items-center mt-3 transition-colors">
-                                Lihat semua tugas
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        <div class="stat-card shadcn-card">
+                            <div class="p-5">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="bg-purple-100 p-2 rounded-full">
+                                            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                 </svg>
-                            </a>
+                            </div>
+                                        <h3 class="text-base font-medium">Tugas</h3>
+                                    </div>
+                                    <span class="badge badge-secondary">Total</span>
+                        </div>
+                                <div id="tugas-count-skeleton" class="skeleton h-8 w-16 mb-3"></div>
+                                <div id="tugas-count-container" class="hidden">
+                        <div class="text-3xl font-bold mb-2" id="tugas-count">-</div>
+                                </div>
+                                <a href="assignments.html" class="text-sm text-primary hover:underline flex items-center mt-3 transition-colors">
+                            Lihat semua tugas
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Dashboard content -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <!-- Upcoming events -->
-                    <div class="shadcn-card">
-                        <div class="p-4 border-b flex justify-between items-center">
-                            <h2 class="text-base font-medium">Event Mendatang</h2>
-                            <span class="badge badge-secondary">Jadwal</span>
+                <div id="dashboard-recent-activity" class="lazy-tab-content hidden">
+                    <div id="activity-container" class="shadcn-card p-5">
+                        <h3 class="text-lg font-medium mb-4">Aktivitas Terbaru</h3>
+                        <div id="activity-loading" class="space-y-3">
+                            <div class="skeleton h-12 w-full rounded-md"></div>
+                            <div class="skeleton h-12 w-full rounded-md"></div>
+                            <div class="skeleton h-12 w-full rounded-md"></div>
                         </div>
-                        <div class="p-4" id="upcoming-events">
-                            <!-- Events skeleton -->
-                            <div id="events-skeleton">
-                                <div class="skeleton h-14 mb-3 rounded"></div>
-                                <div class="skeleton h-14 mb-3 rounded"></div>
-                                <div class="skeleton h-14 mb-3 rounded"></div>
-                            </div>
-                        </div>
-                        <div class="bg-muted p-2 text-center">
-                            <a href="events.html" class="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                Lihat semua event
-                            </a>
+                        <div id="activity-content" class="hidden space-y-2">
+                            <!-- Activity content will be loaded here -->
                         </div>
                     </div>
-                    
-                    <!-- Gamification Section -->
-                    <div class="shadcn-card">
-                        <div class="p-4 border-b flex justify-between items-center">
-                            <h2 class="text-base font-medium">Gamifikasi</h2>
-                            <span class="badge badge-secondary">XP & Badge</span>
+                </div>
+                
+                <div id="dashboard-upcoming" class="lazy-tab-content hidden">
+                    <div id="upcoming-container" class="shadcn-card p-5">
+                        <h3 class="text-lg font-medium mb-4">Jadwal Mendatang</h3>
+                        <div id="upcoming-loading" class="space-y-3">
+                            <div class="skeleton h-16 w-full rounded-md"></div>
+                            <div class="skeleton h-16 w-full rounded-md"></div>
                         </div>
-                        <div class="p-4" id="gamification-overview">
-                            <!-- Gamification skeleton -->
-                            <div id="gamification-skeleton">
-                                <div class="skeleton h-20 rounded"></div>
-                            </div>
+                        <div id="upcoming-content" class="hidden space-y-3">
+                            <!-- Upcoming content will be loaded here -->
                         </div>
-                        <div class="bg-muted p-2 text-center">
-                            <a href="gamification.html" class="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                Kelola gamifikasi
-                            </a>
+                        <div id="upcoming-events" class="space-y-3">
+                            <!-- Upcoming events will be loaded here -->
+                        </div>
+                        <div id="gamification-skeleton" class="skeleton h-8 w-16 mb-3"></div>
+                        <div id="gamification-overview">
+                            <!-- Gamification data will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -351,11 +361,45 @@
     <script src="js/api.js"></script>
     <script src="js/layout.js"></script>
     <script src="js/sidebar-fix.js"></script>
+    <script src="js/pagination.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             // Initialize layout
             initLayout();
             updatePageTitle('Dashboard');
+            
+            // Add custom styling for active tabs
+            const tabStyle = document.createElement('style');
+            tabStyle.textContent = `
+                .lazy-tab {
+                    border-bottom-color: transparent;
+                    color: hsl(var(--muted-foreground));
+                    transition: color 0.3s, border-color 0.3s;
+                }
+                
+                .lazy-tab:hover {
+                    color: hsl(var(--foreground));
+                    border-bottom-color: hsl(var(--muted-foreground));
+                }
+                
+                .lazy-tab[data-active="true"] {
+                    color: hsl(var(--primary)) !important;
+                    border-bottom-color: hsl(var(--primary)) !important;
+                    font-weight: 600;
+                }
+                
+                .lazy-tab[data-active="false"] {
+                    border-bottom-color: transparent;
+                }
+            `;
+            document.head.appendChild(tabStyle);
+            
+            // Initialize tabs for lazy loading
+            const lazyTabs = new LazyTabs({
+                tabsSelector: '.lazy-tab',
+                contentSelector: '.lazy-tab-content',
+                onTabChange: loadTabContent
+            });
             
             // Load data in parallel for better performance
             try {
@@ -532,13 +576,17 @@
         
         function renderUpcomingEvents(events, showAll = false) {
             const container = document.getElementById('upcoming-events');
+            if (!container) {
+                console.error('Element with ID "upcoming-events" not found');
+                return;
+            }
             console.log('Rendering events with data:', events);
             
             if (!events || events.length === 0) {
                 container.innerHTML = `
                     <div class="text-center text-muted-foreground py-6">
                         <p class="text-sm">Tidak ada event yang akan datang</p>
-                    </div>
+                </div>
                 `;
                 return;
             }
@@ -549,8 +597,8 @@
                 events.forEach((event, index) => {
                     console.log(`Event ${index}: tanggal=${event.tanggal}, date=${event.date}, created_at=${event.created_at}, timestamp=${event.timestamp}`);
                 });
-                
-                // Sort events by date (ascending)
+            
+            // Sort events by date (ascending)
                 events.sort((a, b) => {
                     // Try multiple date fields to ensure we get a valid date
                     const getDate = (event) => {
@@ -565,9 +613,9 @@
                 });
                 
                 // Filter only upcoming events (today and future) if not showing all
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
                 let displayEvents = events;
                 
                 if (!showAll) {
@@ -578,8 +626,8 @@
                         
                         try {
                             const eventDate = new Date(dateField);
-                            eventDate.setHours(0, 0, 0, 0);
-                            return eventDate >= today;
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate >= today;
                         } catch (e) {
                             console.warn('Error parsing date:', e);
                             return true; // Include events with unparseable dates
@@ -655,29 +703,44 @@
         // Load gamification overview
         async function loadGamificationOverview() {
             try {
-                const xpResponse = await callApi('getGamifikasiXP');
-                const badgesResponse = await callApi('getGamifikasiBadge');
+                const gamificationSkeleton = document.getElementById('gamification-skeleton');
+                const gamificationOverview = document.getElementById('gamification-overview');
                 
-                // Hide skeleton
-                document.getElementById('gamification-skeleton').classList.add('hidden');
-                
-                if (xpResponse.success && badgesResponse.success) {
-                    renderGamificationOverview(xpResponse.data, badgesResponse.data);
-                } else {
-                    document.getElementById('gamification-overview').innerHTML = `
-                        <div class="text-center text-muted-foreground py-6">
-                            <p class="text-sm">Gagal memuat data gamifikasi</p>
-                        </div>
-                    `;
+                // Check if elements exist before using them
+                if (!gamificationSkeleton || !gamificationOverview) {
+                    console.warn('Gamification elements not found in DOM');
+                    return;
                 }
+                
+                // Rest of the function
+                callApi('getGamifikasiXP').then(xpResponse => {
+                    callApi('getGamifikasiBadge').then(badgesResponse => {
+                        // Hide skeleton
+                        gamificationSkeleton.classList.add('hidden');
+                        
+                        if (xpResponse.success && badgesResponse.success) {
+                            renderGamificationOverview(xpResponse.data, badgesResponse.data);
+                        } else {
+                            gamificationOverview.innerHTML = `
+                                <div class="text-center text-muted-foreground py-6">
+                                    <p class="text-sm">Gagal memuat data gamifikasi</p>
+                                </div>
+                            `;
+                        }
+                    });
+                }).catch(error => {
+                    console.error('Error loading gamification overview:', error);
+                    if (gamificationSkeleton) gamificationSkeleton.classList.add('hidden');
+                    if (gamificationOverview) {
+                        gamificationOverview.innerHTML = `
+                            <div class="text-center text-muted-foreground py-6">
+                                <p class="text-sm">Gagal memuat data gamifikasi</p>
+                            </div>
+                        `;
+                    }
+                });
             } catch (error) {
-                console.error('Error loading gamification overview:', error);
-                document.getElementById('gamification-skeleton').classList.add('hidden');
-                document.getElementById('gamification-overview').innerHTML = `
-                    <div class="text-center text-muted-foreground py-6">
-                        <p class="text-sm">Gagal memuat data gamifikasi</p>
-                    </div>
-                `;
+                console.error('Error in loadGamificationOverview:', error);
             }
         }
         
@@ -688,7 +751,7 @@
                 container.innerHTML = `
                     <div class="text-center text-muted-foreground py-6">
                         <p class="text-sm">Belum ada data gamifikasi</p>
-                    </div>
+                </div>
                 `;
                 return;
             }
@@ -739,7 +802,7 @@
                         </p>
                     </div>
                 </div>
-            `;
+                `;
             
             container.innerHTML = html;
         }
@@ -861,6 +924,273 @@
                     toast.remove();
                 }, 300);
             }, 3000);
+        }
+        
+        // Load content based on active tab
+        function loadTabContent(tabId) {
+            console.log(`Loading content for tab: ${tabId}`);
+            
+            switch(tabId) {
+                case 'dashboard-overview':
+                    loadOverviewData();
+                    break;
+                case 'dashboard-recent-activity':
+                    loadActivityData();
+                    break;
+                case 'dashboard-upcoming':
+                    loadUpcomingData();
+                    break;
+            }
+        }
+        
+        // Load overview data (stats)
+        function loadOverviewData() {
+            // Load class count if not already loaded
+            if (document.getElementById('kelas-count').textContent === '-') {
+                loadClassCount();
+            }
+            
+            // Load student count if not already loaded
+            if (document.getElementById('siswa-count').textContent === '-') {
+                loadStudentCount();
+            }
+            
+            // Load assignment count if not already loaded
+            if (document.getElementById('tugas-count').textContent === '-') {
+                loadAssignmentCount();
+            }
+        }
+        
+        // Load activity data
+        function loadActivityData() {
+            const activityContent = document.getElementById('activity-content');
+            const activityLoading = document.getElementById('activity-loading');
+            
+            // Check if already loaded
+            if (!activityContent.classList.contains('hidden')) {
+                return; // Already loaded
+            }
+            
+            // Show loading state
+            activityLoading.classList.remove('hidden');
+            activityContent.classList.add('hidden');
+            
+            // First fetch all classes to get a mapping of class IDs to names
+            getKelas().then(kelasResponse => {
+                // Create a mapping of class IDs to class names
+                const classMap = {};
+                if (kelasResponse.success && kelasResponse.data) {
+                    kelasResponse.data.forEach(kelas => {
+                        classMap[kelas.id] = kelas.nama_kelas || kelas.nama || 'Kelas ' + kelas.id;
+                    });
+                }
+                
+                // Now fetch activities with class name mapping available
+                return Promise.all([
+                    getPaginatedTugas(1, 5),
+                    getPaginatedPresensi(1, 5),
+                    classMap
+                ]);
+            }).then(([tugasResponse, presensiResponse, classMap]) => {
+                let html = '';
+                
+                // Process assignments
+                if (tugasResponse.success && tugasResponse.data.length > 0) {
+                    tugasResponse.data.forEach(tugas => {
+                        html += `
+                            <div class="p-3 border rounded-md">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <span class="badge badge-secondary">Tugas</span>
+                                        <h4 class="font-medium mt-1">${tugas.judul || 'Tanpa judul'}</h4>
+                                    </div>
+                                    <time class="text-sm text-muted-foreground">${formatDate(tugas.tanggal_dibuat)}</time>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Process attendance records
+                if (presensiResponse.success && presensiResponse.data.length > 0) {
+                    presensiResponse.data.forEach(presensi => {
+                        // Get class name from mapping or use a fallback
+                        const kelasNama = classMap[presensi.kelas_id] || presensi.kelas_nama || 'Kelas ' + presensi.kelas_id;
+                        
+                        html += `
+                            <div class="p-3 border rounded-md">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <span class="badge badge-secondary">Presensi</span>
+                                        <h4 class="font-medium mt-1">${kelasNama}</h4>
+                                    </div>
+                                    <time class="text-sm text-muted-foreground">${formatDate(presensi.tanggal)}</time>
+                                </div>
+                </div>
+                `;
+                    });
+                }
+                
+                if (html === '') {
+                    html = '<p class="text-muted-foreground">Tidak ada aktivitas terbaru.</p>';
+                }
+                
+                // Display the results
+                activityContent.innerHTML = html;
+                activityLoading.classList.add('hidden');
+                activityContent.classList.remove('hidden');
+            }).catch(error => {
+                console.error('Error loading activities:', error);
+                activityContent.innerHTML = `<p class="text-destructive">Error: ${error.message}</p>`;
+                activityLoading.classList.add('hidden');
+                activityContent.classList.remove('hidden');
+            });
+        }
+        
+        // Load upcoming events
+        function loadUpcomingData() {
+            const upcomingContent = document.getElementById('upcoming-content');
+            const upcomingLoading = document.getElementById('upcoming-loading');
+            
+            // Check if already loaded
+            if (!upcomingContent.classList.contains('hidden')) {
+                return; // Already loaded
+            }
+            
+            // Show loading state
+            upcomingLoading.classList.remove('hidden');
+            upcomingContent.classList.add('hidden');
+            
+            // Get current date
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // First fetch all classes to get a mapping of class IDs to names
+            getKelas().then(kelasResponse => {
+                // Create a mapping of class IDs to class names
+                const classMap = {};
+                if (kelasResponse.success && kelasResponse.data) {
+                    kelasResponse.data.forEach(kelas => {
+                        classMap[kelas.id] = kelas.nama_kelas || kelas.nama || 'Kelas ' + kelas.id;
+                    });
+                }
+                
+                // Get upcoming events and assignments
+                return Promise.all([
+                    getPaginatedEvent(1, 5, { upcoming: true }),
+                    getPaginatedTugas(1, 5, { 
+                        upcoming: true,
+                        tanggal_selesai_after: today.toISOString().split('T')[0]
+                    }),
+                    classMap
+                ]);
+            }).then(([eventsResponse, tugasResponse, classMap]) => {
+                let html = '';
+                
+                // Process events
+                if (eventsResponse.success && eventsResponse.data.length > 0) {
+                    eventsResponse.data.forEach(event => {
+                        html += `
+                            <div class="p-3 border rounded-md">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <span class="badge badge-secondary">Event</span>
+                                        <h4 class="font-medium mt-1">${event.judul || 'Tanpa judul'}</h4>
+                                        <p class="text-sm text-muted-foreground mt-1">${event.deskripsi || ''}</p>
+                                    </div>
+                                    <time class="text-sm text-muted-foreground">${formatDate(event.tanggal)}</time>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Process upcoming assignments
+                if (tugasResponse.success && tugasResponse.data.length > 0) {
+                    tugasResponse.data.forEach(tugas => {
+                        // Get class name from mapping or use a fallback
+                        const kelasNama = classMap[tugas.kelas_id] || 'Kelas ' + tugas.kelas_id;
+                        
+                html += `
+                            <div class="p-3 border rounded-md">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <span class="badge badge-secondary">Deadline Tugas</span>
+                                        <h4 class="font-medium mt-1">${tugas.judul || 'Tanpa judul'}</h4>
+                                        <p class="text-sm text-muted-foreground mt-1">Kelas: ${kelasNama}</p>
+                                    </div>
+                                    <time class="text-sm text-muted-foreground">${formatDate(tugas.tanggal_selesai)}</time>
+                    </div>
+                </div>
+                `;
+                    });
+                }
+                
+                if (html === '') {
+                    html = '<p class="text-muted-foreground">Tidak ada jadwal mendatang.</p>';
+                }
+                
+                // Display the results
+                upcomingContent.innerHTML = html;
+                upcomingLoading.classList.add('hidden');
+                upcomingContent.classList.remove('hidden');
+            }).catch(error => {
+                console.error('Error loading upcoming events:', error);
+                upcomingContent.innerHTML = `<p class="text-destructive">Error: ${error.message}</p>`;
+                upcomingLoading.classList.add('hidden');
+                upcomingContent.classList.remove('hidden');
+            });
+        }
+        
+        // Load class count with lazy loading
+        async function loadClassCount() {
+            try {
+                const response = await getKelas();
+                if (response.success) {
+                    document.getElementById('kelas-count').textContent = response.data.length;
+                    document.getElementById('kelas-count-skeleton').classList.add('hidden');
+                    document.getElementById('kelas-count-container').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading class count:', error);
+                document.getElementById('kelas-count').textContent = 'Error';
+                document.getElementById('kelas-count-skeleton').classList.add('hidden');
+                document.getElementById('kelas-count-container').classList.remove('hidden');
+            }
+        }
+        
+        // Load student count with lazy loading
+        async function loadStudentCount() {
+            try {
+                const response = await getSiswa();
+                if (response.success) {
+                    document.getElementById('siswa-count').textContent = response.data.length;
+                    document.getElementById('siswa-count-skeleton').classList.add('hidden');
+                    document.getElementById('siswa-count-container').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading student count:', error);
+                document.getElementById('siswa-count').textContent = 'Error';
+                document.getElementById('siswa-count-skeleton').classList.add('hidden');
+                document.getElementById('siswa-count-container').classList.remove('hidden');
+            }
+        }
+        
+        // Load assignment count with lazy loading
+        async function loadAssignmentCount() {
+            try {
+                const response = await getTugas();
+                if (response.success) {
+                    document.getElementById('tugas-count').textContent = response.data.length;
+                    document.getElementById('tugas-count-skeleton').classList.add('hidden');
+                    document.getElementById('tugas-count-container').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading assignment count:', error);
+                document.getElementById('tugas-count').textContent = 'Error';
+                document.getElementById('tugas-count-skeleton').classList.add('hidden');
+                document.getElementById('tugas-count-container').classList.remove('hidden');
+            }
         }
     </script>
 </body>
