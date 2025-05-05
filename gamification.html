@@ -841,18 +841,6 @@
     </div>
     
     <script>
-        // Ensure API_URL is defined
-        if (typeof API_URL === 'undefined') {
-            console.warn('API_URL not defined, using default URL');
-            // Primary URL
-            window.API_URL = 'https://script.google.com/macros/s/AKfycbzmzrbEGpVZxm4NskhdZ_WOh41-GKeIn1ryxg1jkxHIfGtG5vHDKzN49J5oYx1amu_iRQ/exec';
-            
-            // Backup URL in case the primary fails
-            window.BACKUP_API_URL = 'https://script.google.com/macros/s/AKfycbxZVwdUIupr3e3ljw-lVaZMeNuEk7rV9GOYFxshyUaJKmi3TKCsGL6B5EaLSNeJtsmIzg/exec';
-        }
-        
-        console.log('Using API URL:', API_URL);
-        
         // Global variables
         let allStudents = [];
         let allXP = [];

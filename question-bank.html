@@ -430,14 +430,6 @@
     <div id="toast-container" class="toast-container"></div>
     
     <script>
-        // Ensure API_URL is defined
-        if (typeof API_URL === 'undefined') {
-            console.warn('API_URL not defined, using default URL');
-            window.API_URL = 'https://script.google.com/macros/s/AKfycbzmzrbEGpVZxm4NskhdZ_WOh41-GKeIn1ryxg1jkxHIfGtG5vHDKzN49J5oYx1amu_iRQ/exec';
-        }
-        
-        console.log('Using API URL:', API_URL);
-        
         // Global variables
         let allQuestions = [];
         let currentQuestionId = null;
